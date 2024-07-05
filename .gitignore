@@ -1,0 +1,20 @@
+# VS code
+.vscode/
+
+# General files
+*.dat
+*.pyc
+*.pdf
+*.msh
+*.json
+*.anh
+*.FEH
+*.pre
+*.pos
+*.res
+*.geo_unrolled
+*.db
+*.sqlite3
+
+# files
+example_results
