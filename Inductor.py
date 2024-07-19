@@ -1131,10 +1131,9 @@ if __name__ == '__main__':
         pq3220 = core_database["PQ 32/20"]
         pq3230 = core_database["PQ 32/30"]
         pq3535 = core_database["PQ 35/35"]
-        pq4030 = core_database["PQ 40/30"]
 
         min_core = pq1611
-        max_core = pq4030
+        max_core = pq3535
 
         ad = AutomatedDesign(working_directory=working_directory,
                              magnetic_component='inductor',
@@ -1148,9 +1147,9 @@ if __name__ == '__main__':
                              database_core_names=[],
                              database_litz_names=["1.5x105x0.1", "1.4x200x0.071", "1.1x60x0.1", "1.35x200x0.071", "1.8x512x0.05"],
                              solid_conductor_r=[],  # 0.0013
-                             manual_core_inner_diameter=list(np.linspace(min_core['core_inner_diameter'], max_core['core_inner_diameter'], 9)),
-                             manual_window_h=list(np.linspace(min_core['window_h'], max_core['window_h'], 9)),
-                             manual_window_w=list(np.linspace(min_core['window_w'], max_core['window_w'], 9)),
+                             manual_core_inner_diameter=list(np.linspace(min_core['core_inner_diameter'], max_core['core_inner_diameter'], 7)),
+                             manual_window_h=list(np.linspace(min_core['window_h'], max_core['window_h'], 7)),
+                             manual_window_w=list(np.linspace(min_core['window_w'], max_core['window_w'], 7)),
                              no_of_turns=np.arange(1, 80).tolist(),
                              n_air_gaps=[1],
                              air_gap_height=list(np.linspace(0.001, 0.0015, 15)),
