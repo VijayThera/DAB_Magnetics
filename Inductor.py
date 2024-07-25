@@ -772,6 +772,8 @@ class AutomatedDesign:
         else:
             raise Exception("Please input at least one conductor type")
 
+        print(f'window_h: {final_data_matrix[:, self.param["window_h"]]}')
+
         # Filter based on the geometry
         window_area = final_data_matrix[:, self.param["window_h"]] * final_data_matrix[:, self.param["window_w"]]
         insulation_area = ((self.left_core_insulation + self.right_core_insulation) * final_data_matrix[:,
@@ -1253,7 +1255,7 @@ if __name__ == '__main__':
                              magnetic_component='inductor',
                              target_inductance=675 * 1e-6,
                              frequency=200000,
-                             target_inductance_percent_tolerance=5,
+                             target_inductance_percent_tolerance=20,
                              winding_scheme='Square',
                              peak_current=2.909,
                              rms_current=1.0, # RMS current value from GeckoCIRCUITS - rms of i_Lc1: 0.9823703454676544
@@ -1263,12 +1265,12 @@ if __name__ == '__main__':
                              database_litz_names=["0.85x18x0.1", "1.1x32x0.1", "1.5x64x0.1"],
                              solid_conductor_r=[],  # 0.0013
                              manual_core_inner_diameter=list(
-                                 np.linspace(min_core['core_inner_diameter'], max_core['core_inner_diameter'], 20)),
-                             manual_window_h=list(np.linspace(min_core['window_h'], max_core['window_h'], 20)),
-                             manual_window_w=list(np.linspace(min_core['window_w'], max_core['window_w'], 20)),
-                             no_of_turns=np.arange(1, 50).tolist(),
+                                 np.linspace(min_core['core_inner_diameter'], max_core['core_inner_diameter'], 10)),
+                             manual_window_h=list(np.linspace(min_core['window_h'], max_core['window_h'], 10)),
+                             manual_window_w=list(np.linspace(min_core['window_w'], max_core['window_w'], 10)),
+                             no_of_turns=np.arange(30, 80).tolist(),
                              n_air_gaps=[1],
-                             air_gap_height=list(np.linspace(0.0001, 0.002, 50)),
+                             air_gap_height=list(np.linspace(0.0001, 0.002, 5)),
                              air_gap_position=[50],
                              core_material=[fmt.Material.N95],
                              mult_air_gap_type=['center_distributed'],
@@ -1276,7 +1278,7 @@ if __name__ == '__main__':
                              bot_core_insulation=0.0022,
                              left_core_insulation=0.002,
                              right_core_insulation=0.002,
-                             inner_winding_insulation=0.0005,
+                             inner_winding_insulation=0.0001, #0.00005
                              temperature=100.0,
                              manual_litz_conductor_r=[],
                              manual_litz_strand_r=[],
