@@ -5,6 +5,18 @@ import matplotlib.pyplot as plt
 import magnethub as mh
 import femmt as fmt
 import femmt.functions_reluctance as fr
+from pandas.plotting import table
+
+# core_height = 11.6e-3 + 7e-3 / 2
+# winding_height = 6.7e-3
+# core_width = 14.4e-3
+# winding_width = 3.7e-3
+# inner_leg_width = 7e-3 / 2
+#
+# air_gap_volume = np.pi * inner_leg_width ** 2 * 1e-3
+#
+# x = np.pi * (core_width ** 2 * core_height - (inner_leg_width + winding_width) ** 2 * winding_height
+#              + inner_leg_width ** 2 * winding_height) - air_gap_volume
 
 # #===================================================
 # from matplotlib import rcParams
@@ -171,70 +183,205 @@ import femmt.functions_reluctance as fr
 # p, h = mdl(b_wave2, freq, temp)
 # print(f'p:{p/1000} kW/m³')
 #==============================================================
+# #=======================================================================================================================
+# def calculate_litz_areas():
+#     """
+#     Calculate the cross-sectional areas of all Litz wires in the database.
+#
+#     :return: A dictionary where keys are Litz wire identifiers and values are their cross-sectional areas in square meters.
+#     :rtype: Dict[str, float]
+#     """
+#     litz_dict = fmt.litz_database()
+#     areas = {}
+#
+#     for key, data in litz_dict.items():
+#         strand_numbers = data["strands_numbers"]
+#         strand_radius = data["strand_radii"]
+#         conductor_radius = data["conductor_radii"]
+#
+#         strand_area = np.pi * (strand_radius ** 2)
+#         total_area = strand_numbers * strand_area
+#
+#         areas[key] = {
+#             "strands": strand_numbers,
+#             "strand diameter / mm": round(2 * strand_radius * 1000, 3),  # Diameter in mm
+#             "conductor diameter / mm": round(2 * (conductor_radius * 1000), 3),  # Assuming same as stranddia for this example
+#             "crossection area / mm^2": round(total_area, 8)
+#         }
+#
+#     return areas
+#
+# # Calculate areas
+# litz_data = calculate_litz_areas()
+#
+# # Create a DataFrame from the dictionary
+# df = pd.DataFrame.from_dict(litz_data, orient='index')
+#
+# # Sort DataFrame by 'area' in ascending order
+# df = df.sort_values(by='crossection area / mm^2', ascending=True)
+#
+# # Apply Times New Roman font globally
+# plt.rcParams.update({'font.family': 'serif', 'font.serif': 'Times New Roman'})
+#
+# # Save DataFrame to an image
+# fig, ax = plt.subplots(figsize=(10, 4))  # Adjust the size as needed
+# ax.xaxis.set_visible(False)
+# ax.yaxis.set_visible(False)
+# ax.set_frame_on(False)
+# tbl = table(ax, df, loc='center', cellLoc='center', colWidths=[0.2]*len(df.columns))
+# tbl.auto_set_font_size(False)
+# tbl.set_fontsize(12)
+# tbl.scale(1.2, 1.2)  # Adjust the scale as needed
+#
+# # Save the table as an image
+# # plt.savefig('litz_table.png', bbox_inches='tight', pad_inches=0.1)
+# plt.show()
+# #=======================================================================================================================
 
-mdl = mh.loss.LossModel(material="3C95", team="paderborn")
-freq = 200e3
-temp = 100
+# def calculate_litz_areas():
+#     """
+#     Calculate the cross-sectional areas of all Litz wires in the database.
+#
+#     :return: A dictionary where keys are Litz wire identifiers and values are their cross-sectional areas in square meters.
+#     :rtype: Dict[str, float]
+#     """
+#     litz_dict = fmt.litz_database()
+#     areas = {}
+#
+#     for key, data in litz_dict.items():
+#         strand_numbers = data["strands_numbers"]
+#         strand_radius = data["strand_radii"]
+#
+#         strand_area = np.pi * (strand_radius ** 2)
+#         total_area = strand_numbers * strand_area
+#
+#         areas[key] = total_area
+#
+#     return areas
+#
+#
+# def filter_and_print_small_areas(threshold: float):
+#     """
+#     Filter and print Litz wires with cross-sectional areas less than the given threshold.
+#
+#     :param threshold: The area threshold in square meters.
+#     """
+#     areas = calculate_litz_areas()
+#
+#     for key, area in areas.items():
+#         if threshold > area > 9.5e-8:
+#             print(f"copper cross-sectional area of the Litz wire '{key}' is {area:.6e} m2.")
+#
+# threshold = 1.5e-6
+# filter_and_print_small_areas(threshold)
 
-df = pd.read_csv('Current waveform.csv')
-time = df['# t']
-i_Lc1 = df['i_Lc1']
-total_points = len(i_Lc1)
-step_size = total_points // 1024
-i_Lc1_sampled = i_Lc1[::step_size][:1024]
-time_sampled = time[::step_size][:1024]
-i_Lc1_sampled = np.array(i_Lc1_sampled)
-time_sampled = np.array(time_sampled)
-print(f'I_max:{np.nanmax(i_Lc1_sampled)}')
+# mdl = mh.loss.LossModel(material="3C95", team="paderborn")
+# freq = 200e3
+# temp = 100
+#
+# df = pd.read_csv('currents_shifted.csv')
+# time = df['# t']
+# i_Lc1 = df['i_Lc1']
+# total_points = len(i_Lc1)
+# # print(total_points)
+# step_size = total_points // 1024
+# i_Lc1_sampled = i_Lc1[::step_size][:1024]
+# time_sampled = time[::step_size][:1024]
+# i_Lc1_sampled = np.array(i_Lc1_sampled)
+# time_sampled = np.array(time_sampled)
+# # print(f'I_max:{np.nanmax(i_Lc1_sampled)}')
+#
+# mu_o = 4e-7 * np.pi
+# mu_r = 3000
+# n = 10
+# l_gap = 2e-3
+#
+# core_database = fmt.core_database()
+# pq1611 = core_database["PQ 16/11.6"]
+#
+# core_inner_diameter = pq1611['core_inner_diameter']
+# core_height_upper = pq1611['core_h'] / 2
+# core_height_lower = pq1611['core_h'] / 2
+# window_w = pq1611['window_w']
+# core_round_height = pq1611['window_h']
+# core_top_bot_height = core_inner_diameter / 4
+#
+# r_gap = fr.r_air_gap_round_round(l_gap, core_inner_diameter, core_height_upper, core_height_lower)
+# r_top = fr.r_core_top_bot_radiant(core_inner_diameter, window_w, mu_r, core_top_bot_height)
+# r_round = fr.r_core_round(core_inner_diameter, core_round_height, mu_r)
+# r_core = 2 * r_top + 2 * r_round
+# r_total = r_core + r_gap
+# core_area = (core_inner_diameter / 2) ** 2 * np.pi
+#
+# L = n**2/r_total
+#
+# print(f'L:{L}')
+
+# b_wave1 = n * i_Lc1_sampled / (r_total * core_area)
+# # print(f'B_max:{np.nanmax(b_wave1)}')
+#
+# # get power loss in W/m³ and estimated H wave in A/m
+# p, h = mdl(b_wave1, freq, temp)
+# print(f'p:{p/1000} kW/m³')
+#
+# # Plotting the data
+# plt.figure(figsize=(12, 6))
+# # Current vs Time plot
+# plt.subplot(2, 1, 1)
+# plt.plot(time_sampled, i_Lc1_sampled, label='i_Lc1 (Current)')
+# plt.xlabel('Time (s)')
+# plt.ylabel('Current (A)')
+# plt.title('Current vs Time')
+# plt.legend()
+# plt.grid(True)
+#
+# # B wave vs Time plot
+# plt.subplot(2, 1, 2)
+# plt.plot(time_sampled, b_wave1, label='b_wave (Magnetic Flux Density)', color='r')
+# plt.xlabel('Time (s)')
+# plt.ylabel('Magnetic Flux Density (T)')
+# plt.title('Magnetic Flux Density vs Time')
+# plt.legend()
+# plt.grid(True)
+#
+# plt.tight_layout()
+# # plt.show()
 
 mu_o = 4e-7 * np.pi
 mu_r = 3000
-n = 40
-l_gap = 1e-3
+n_range = np.arange(1, 101)
+l_gap_range = np.linspace(0.1e-3, 2e-3, 100)
 
 core_database = fmt.core_database()
-pq1611 = core_database["PQ 20/16"]
+core = core_database["PQ 20/20"]
 
-core_inner_diameter = pq1611['core_inner_diameter']
-core_height_upper = pq1611['core_h'] / 2
-core_height_lower = pq1611['core_h'] / 2
-window_w = pq1611['window_w']
-core_round_height = pq1611['window_h']
+core_inner_diameter = core['core_inner_diameter']
+core_height_upper = core['core_h'] / 2
+core_height_lower = core['core_h'] / 2
+window_w = core['window_w']
+core_round_height = core['window_h']
 core_top_bot_height = core_inner_diameter / 4
 
-r_gap = fr.r_air_gap_round_round(l_gap, core_inner_diameter, core_height_upper, core_height_lower)
-r_top = fr.r_core_top_bot_radiant(core_inner_diameter, window_w, mu_r, core_top_bot_height)
-r_round = fr.r_core_round(core_inner_diameter, core_round_height, mu_r)
-r_core = 2 * r_top + 2 * r_round
-r_total = r_core + r_gap
-core_area = (core_inner_diameter / 2) ** 2 * np.pi
+def calculate_r_total(l_gap):
+    r_gap = fr.r_air_gap_round_round(l_gap, core_inner_diameter, core_height_upper, core_height_lower)
+    r_top = fr.r_core_top_bot_radiant(core_inner_diameter, window_w, mu_r, core_top_bot_height)
+    r_round = fr.r_core_round(core_inner_diameter, core_round_height, mu_r)
+    r_core = 2 * r_top + 2 * r_round
+    r_total = r_core + r_gap
+    return r_total
 
-b_wave1 = n * i_Lc1_sampled / (r_total * core_area)
-print(f'B_max:{np.nanmax(b_wave1)}')
+def find_turns_and_gap(target_inductance):
+    results = []
+    for n in n_range:
+        for l_gap in l_gap_range:
+            r_total = calculate_r_total(l_gap)
+            L = n**2 / r_total
+            if np.isclose(L, target_inductance, rtol=1e-2):  # 1% relative tolerance
+                results.append((n, r_total, l_gap, L))
+    return results
 
-# get power loss in W/m³ and estimated H wave in A/m
-p, h = mdl(b_wave1, freq, temp)
-print(f'p:{p/1000} kW/m³')
+target_inductance = 680e-6
+results = find_turns_and_gap(target_inductance)
 
-# Plotting the data
-plt.figure(figsize=(12, 6))
-# Current vs Time plot
-plt.subplot(2, 1, 1)
-plt.plot(time_sampled, i_Lc1_sampled, label='i_Lc1 (Current)')
-plt.xlabel('Time (s)')
-plt.ylabel('Current (A)')
-plt.title('Current vs Time')
-plt.legend()
-plt.grid(True)
-
-# B wave vs Time plot
-plt.subplot(2, 1, 2)
-plt.plot(time_sampled, b_wave1, label='b_wave (Magnetic Flux Density)', color='r')
-plt.xlabel('Time (s)')
-plt.ylabel('Magnetic Flux Density (T)')
-plt.title('Magnetic Flux Density vs Time')
-plt.legend()
-plt.grid(True)
-
-plt.tight_layout()
-plt.show()
+for result in results:
+    print(f"Turns: {result[0]}, r_total: {result[1]:.0f} Air Gap: {result[2]:.4f} m, Inductance: {result[3]:.2e} H")

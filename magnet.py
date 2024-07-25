@@ -55,7 +55,7 @@ print(f'B_waves:{b_waves[0]}')
 
 # get power loss in W/m³ and estimated H wave in A/m
 p, h = mdl(b_waves, freq, temp)
-print(f'p:{p/1000} kW/m³')
+print(f'p:{p / 1000} kW/m³')
 print(np.size(p))
 
 # # Plotting the data

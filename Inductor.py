@@ -20,7 +20,6 @@ import materialdatabase as mdb
 # femmt libraries
 import femmt as fmt
 
-
 material_db = mdb.MaterialDatabase()
 
 
@@ -135,7 +134,7 @@ def plot_2d(x_value: list, y_value: list, x_label: str, y_label: str, title: str
         annot.xy = pos
         text = ""
         if z_label is None and inductance_value is None:
-            text = "case: {}\n{}: {}\n{}:{}".\
+            text = "case: {}\n{}: {}\n{}:{}". \
                 format(" ".join([names[n] for n in ind["ind"]]),
                        x_label, " ".join([x_value_str[n] for n in ind["ind"]]),
                        y_label, " ".join([y_value_str[n] for n in ind["ind"]]))
@@ -152,7 +151,7 @@ def plot_2d(x_value: list, y_value: list, x_label: str, y_label: str, title: str
                        y_label, " ".join([y_value_str[n] for n in ind["ind"]]),
                        l_label, " ".join([l_value_str[n] for n in ind["ind"]]))
         else:
-            text = "case: {}\n{}: {}\n{}:{}\n{}:{}\n{}:{}".\
+            text = "case: {}\n{}: {}\n{}:{}\n{}:{}\n{}:{}". \
                 format(" ".join([names[n] for n in ind["ind"]]),
                        x_label, " ".join([x_value_str[n] for n in ind["ind"]]),
                        y_label, " ".join([y_value_str[n] for n in ind["ind"]]),
@@ -290,7 +289,8 @@ def plot_3d(x_value: list, y_value: list, z_value: list, x_label: str, y_label: 
         if hasattr(annotate_plot, 'label'):
             annotate_plot.label.remove()
         # Get data point from array of points X, at position index
-        x2, y2, _ = proj3d.proj_transform(array_of_points[index, 0], array_of_points[index, 1], array_of_points[index, 2], ax.get_proj())
+        x2, y2, _ = proj3d.proj_transform(array_of_points[index, 0], array_of_points[index, 1],
+                                          array_of_points[index, 2], ax.get_proj())
         annotate_plot.label = plt.annotate(
             f'case{index}\nVolume:{x_value_str[index]}\nLoss:{y_value_str[index]}\nCost:{z_value_str[index]}',
             xy=(x2, y2), xytext=(-20, 20), textcoords='offset points', ha='right', va='bottom',
@@ -357,7 +357,8 @@ def load_fem_simulation_results(working_directory: str):
     print("##########################")
     print(f"{fem_simulation_results_directory=}")
     print("##########################")
-    file_names = [f for f in os.listdir(fem_simulation_results_directory) if os.path.isfile(os.path.join(fem_simulation_results_directory, f))]
+    file_names = [f for f in os.listdir(fem_simulation_results_directory) if
+                  os.path.isfile(os.path.join(fem_simulation_results_directory, f))]
 
     counter = 0
     for name in file_names:
@@ -417,6 +418,7 @@ class AutomatedDesign:
                  target_inductance_percent_tolerance: int,
                  winding_scheme: str,
                  peak_current: float,
+                 rms_current: float,
                  percent_of_flux_density_saturation: int,
                  percent_of_total_loss: int,
                  database_core_names: list,
@@ -509,6 +511,7 @@ class AutomatedDesign:
         self.goal_inductance = target_inductance
         self.goal_inductance_percent_tolerance = target_inductance_percent_tolerance
         self.peak_current = peak_current
+        self.rms_current = rms_current
         self.percent_of_b_sat = percent_of_flux_density_saturation
         self.percent_of_total_loss = percent_of_total_loss
         self.frequency = frequency
@@ -556,7 +559,8 @@ class AutomatedDesign:
             self.mult_air_gap_type_list = self.input_pre_process()
 
         # Call to Reluctance model (Class MagneticCircuit)
-        mc = fmt.MagneticCircuit(core_inner_diameter=self.core_inner_diameter_list, window_h=self.window_h_list, window_w=self.window_w_list,
+        mc = fmt.MagneticCircuit(core_inner_diameter=self.core_inner_diameter_list, window_h=self.window_h_list,
+                                 window_w=self.window_w_list,
                                  no_of_turns=self.no_of_turns, n_air_gaps=self.n_air_gaps,
                                  air_gap_h=self.air_gap_height, air_gap_position=self.air_gap_position,
                                  mu_r_abs=self.mu_r_abs, mult_air_gap_type=self.mult_air_gap_type_list,
@@ -599,7 +603,8 @@ class AutomatedDesign:
     def input_pre_process(self):
         """Pre-process the user input to prepare lists for reluctance model."""
         # Creating all possible combinations from the given manual geometry parameters
-        all_manual_combinations = list(product(self.manual_core_inner_diameter, self.manual_window_h, self.manual_window_w))
+        all_manual_combinations = list(
+            product(self.manual_core_inner_diameter, self.manual_window_h, self.manual_window_w))
         manual_core_inner_diameter = [item[0] for item in all_manual_combinations]
         manual_window_h = [item[1] for item in all_manual_combinations]
         manual_window_w = [item[2] for item in all_manual_combinations]
@@ -654,9 +659,10 @@ class AutomatedDesign:
         :param data_matrix: Matrix containing the design parameters
         :type data_matrix: ndarray
         """
-        data_matrix = data_matrix[np.where((data_matrix[:, self.param["inductance"]] > ((100 - self.goal_inductance_percent_tolerance) / 100) * \
-                                            self.goal_inductance) & (data_matrix[:, self.param["inductance"]] < \
-                                                                     ((100 + self.goal_inductance_percent_tolerance) / 100) * self.goal_inductance))]
+        data_matrix = data_matrix[np.where(
+            (data_matrix[:, self.param["inductance"]] > ((100 - self.goal_inductance_percent_tolerance) / 100) * \
+             self.goal_inductance) & (data_matrix[:, self.param["inductance"]] < \
+                                      ((100 + self.goal_inductance_percent_tolerance) / 100) * self.goal_inductance))]
         return data_matrix
 
     def filter_reluctance_flux_saturation(self, data_matrix):
@@ -669,8 +675,10 @@ class AutomatedDesign:
         # Dictionary to store {initial_permeability: 'Material_name'} to map material_name during FEM iteration
         b_sat_dict = {}
         for material_name in self.core_material:
-            b_sat_key = material_db.get_material_attribute(material_name=material_name, attribute="initial_permeability")
-            b_sat_dict[b_sat_key] = material_db.get_material_attribute(material_name=material_name, attribute="max_flux_density")
+            b_sat_key = material_db.get_material_attribute(material_name=material_name,
+                                                           attribute="initial_permeability")
+            b_sat_dict[b_sat_key] = material_db.get_material_attribute(material_name=material_name,
+                                                                       attribute="max_flux_density")
             self.core_material_dict[b_sat_key] = material_name
         # print(self.core_material_dict)
 
@@ -680,15 +688,18 @@ class AutomatedDesign:
             b_sat[index] = b_sat_dict[data_matrix[index, self.param["mu_r_abs"]]]
 
         # flux_max = L * i_max / N
-        total_flux_max = (data_matrix[:, self.param["inductance"]] * self.peak_current) / data_matrix[:, self.param["no_of_turns"]]
+        total_flux_max = (data_matrix[:, self.param["inductance"]] * self.peak_current) / data_matrix[:,
+                                                                                          self.param["no_of_turns"]]
         b_max_center = total_flux_max / data_matrix[:, self.param["center_leg_area"]]
-        b_max_middle = total_flux_max / (np.pi * data_matrix[:, self.param["core_inner_diameter"]] * data_matrix[:, self.param["core_h_middle"]])
+        b_max_middle = total_flux_max / (np.pi * data_matrix[:, self.param["core_inner_diameter"]] * data_matrix[:,
+                                                                                                     self.param[
+                                                                                                         "core_h_middle"]])
         b_max_outer = total_flux_max / data_matrix[:, self.param["outer_leg_area"]]
 
-        data_matrix = self.add_column_to_data_matrix(data_matrix, total_flux_max, 'total_flux_max')     # 16
-        data_matrix = self.add_column_to_data_matrix(data_matrix, b_max_center, 'b_max_center')         # 17
-        data_matrix = self.add_column_to_data_matrix(data_matrix, b_max_middle, 'b_max_middle')         # 18
-        data_matrix = self.add_column_to_data_matrix(data_matrix, b_max_outer, 'b_max_outer')           # 19
+        data_matrix = self.add_column_to_data_matrix(data_matrix, total_flux_max, 'total_flux_max')  # 16
+        data_matrix = self.add_column_to_data_matrix(data_matrix, b_max_center, 'b_max_center')  # 17
+        data_matrix = self.add_column_to_data_matrix(data_matrix, b_max_middle, 'b_max_middle')  # 18
+        data_matrix = self.add_column_to_data_matrix(data_matrix, b_max_outer, 'b_max_outer')  # 19
 
         data_matrix_temp = np.zeros((0, len(data_matrix[0])))
         for index in range(len(data_matrix)):
@@ -696,7 +707,7 @@ class AutomatedDesign:
                     (data_matrix[index, self.param["b_max_center"]] < (self.percent_of_b_sat / 100) * b_sat[index]) & \
                     (data_matrix[index, self.param["b_max_outer"]] < (self.percent_of_b_sat / 100) * b_sat[index]):
                 data_matrix_temp = np.vstack([data_matrix_temp, data_matrix[index, :]])
-
+        # print(f'data_matrix_temp:{data_matrix_temp}')
         return data_matrix_temp
 
     def filter_reluctance_winding_window(self, data_matrix):
@@ -739,12 +750,12 @@ class AutomatedDesign:
             temp_var5 = np.full((len(data_matrix), 1), self.solid_conductor_r[j])
             temp_var6 = np.full((len(data_matrix), 1), self.solid_conductor_r[j])
 
-            temp_data_matrix = self.add_column_to_data_matrix(data_matrix, temp_var1, 'litz_conductor_r')        # 20
-            temp_data_matrix = self.add_column_to_data_matrix(temp_data_matrix, temp_var2, 'litz_strand_r')      # 21
-            temp_data_matrix = self.add_column_to_data_matrix(temp_data_matrix, temp_var3, 'litz_strand_n')      # 22
-            temp_data_matrix = self.add_column_to_data_matrix(temp_data_matrix, temp_var4, 'litz_fill_factor')   # 23
+            temp_data_matrix = self.add_column_to_data_matrix(data_matrix, temp_var1, 'litz_conductor_r')  # 20
+            temp_data_matrix = self.add_column_to_data_matrix(temp_data_matrix, temp_var2, 'litz_strand_r')  # 21
+            temp_data_matrix = self.add_column_to_data_matrix(temp_data_matrix, temp_var3, 'litz_strand_n')  # 22
+            temp_data_matrix = self.add_column_to_data_matrix(temp_data_matrix, temp_var4, 'litz_fill_factor')  # 23
             temp_data_matrix = self.add_column_to_data_matrix(temp_data_matrix, temp_var5, 'solid_conductor_r')  # 24
-            temp_data_matrix = self.add_column_to_data_matrix(temp_data_matrix, temp_var6, 'conductor_radius')   # 25
+            temp_data_matrix = self.add_column_to_data_matrix(temp_data_matrix, temp_var6, 'conductor_radius')  # 25
 
             if j == 0:
                 final_data_matrix2 = temp_data_matrix
@@ -763,12 +774,15 @@ class AutomatedDesign:
 
         # Filter based on the geometry
         window_area = final_data_matrix[:, self.param["window_h"]] * final_data_matrix[:, self.param["window_w"]]
-        insulation_area = ((self.left_core_insulation + self.right_core_insulation) * final_data_matrix[:, self.param["window_h"]]) + \
+        insulation_area = ((self.left_core_insulation + self.right_core_insulation) * final_data_matrix[:,
+                                                                                      self.param["window_h"]]) + \
                           ((self.top_core_insulation + self.bot_core_insulation) * \
-                           (final_data_matrix[:, self.param["window_w"]] - (self.left_core_insulation + self.right_core_insulation)))
+                           (final_data_matrix[:, self.param["window_w"]] - (
+                                   self.left_core_insulation + self.right_core_insulation)))
 
         data_matrix = final_data_matrix[
-            np.where((final_data_matrix[:, self.param["no_of_turns"]] * np.pi * final_data_matrix[:, self.param["conductor_radius"]] ** 2) < \
+            np.where((final_data_matrix[:, self.param["no_of_turns"]] * np.pi * final_data_matrix[:,
+                                                                                self.param["conductor_radius"]] ** 2) < \
                      (self.winding_factor * (window_area - insulation_area)))]
 
         return data_matrix
@@ -784,7 +798,8 @@ class AutomatedDesign:
         mu_r_imag_dict = {}
         counter = 0
         for material_name in self.core_material:
-            mu_r_imag_key = material_db.get_material_attribute(material_name=material_name, attribute="initial_permeability")
+            mu_r_imag_key = material_db.get_material_attribute(material_name=material_name,
+                                                               attribute="initial_permeability")
             mu_r_imag_dict[mu_r_imag_key] = counter
             counter = counter + 1
 
@@ -798,7 +813,8 @@ class AutomatedDesign:
         # print(material_data_list)
 
         # Creating interpolation function between mu_imaginary and magnetic flux density
-        mu_r_imag_interpol_func = [interp1d(material_data_list[i][0], material_data_list[i][1], kind="cubic") for i in range(len(self.core_material))]
+        mu_r_imag_interpol_func = [interp1d(material_data_list[i][0], material_data_list[i][1], kind="cubic") for i in
+                                   range(len(self.core_material))]
 
         # Creating mu_imag array corresponding to the material type
         mu_r_imag = np.zeros(len(data_matrix))
@@ -810,7 +826,8 @@ class AutomatedDesign:
         volume_center = (np.pi * (data_matrix[:, self.param["core_inner_diameter"]] / 2) ** 2) * \
                         (data_matrix[:, self.param["window_h"]] + data_matrix[:, self.param["core_h_middle"]] - \
                          (data_matrix[:, self.param["n_air_gaps"]] * data_matrix[:, self.param["air_gap_h"]]))
-        volume_outer = (np.pi * ((data_matrix[:, self.param["r_outer"]] ** 2) - (data_matrix[:, self.param["r_inner"]] ** 2))) * \
+        volume_outer = (np.pi * (
+                (data_matrix[:, self.param["r_outer"]] ** 2) - (data_matrix[:, self.param["r_inner"]] ** 2))) * \
                        (data_matrix[:, self.param["window_h"]] + data_matrix[:, self.param["core_h_middle"]])
         # TODO: Confirm which volume to use
 
@@ -822,28 +839,47 @@ class AutomatedDesign:
 
         p_hyst_center = 0.5 * (2 * np.pi * self.frequency) * fmt.mu_0 * mu_r_imag * ((data_matrix[:,
                                                                                       self.param["b_max_center"]] / \
-                                                                                      (fmt.mu_0 * data_matrix[:, self.param["mu_r_abs"]])) ** 2)
+                                                                                      (fmt.mu_0 * data_matrix[:,
+                                                                                                  self.param[
+                                                                                                      "mu_r_abs"]])) ** 2)
 
-        p_hyst_outer = 0.5 * (2 * np.pi * self.frequency) * mu_r_imag * fmt.mu_0 * ((data_matrix[:, self.param["b_max_outer"]] / \
-                                                                                     (fmt.mu_0 * data_matrix[:, self.param["mu_r_abs"]])) ** 2)
+        p_hyst_outer = 0.5 * (2 * np.pi * self.frequency) * mu_r_imag * fmt.mu_0 * (
+                (data_matrix[:, self.param["b_max_outer"]] / \
+                 (fmt.mu_0 * data_matrix[:, self.param["mu_r_abs"]])) ** 2)
 
         p_hyst_density_center = p_hyst_center * volume_center
         p_hyst_density_middle = \
             0.5 * (2 * np.pi * self.frequency) * mu_r_imag * fmt.mu_0 * \
-            ((data_matrix[:, self.param["total_flux_max"]] / (fmt.mu_0 * data_matrix[:, self.param["mu_r_abs"]])) ** 2) * \
-            (1 / (2 * np.pi * data_matrix[:, self.param["core_h_middle"]])) * np.log((data_matrix[:, self.param["r_inner"]] * 2) / \
-                                                                                     data_matrix[:, self.param["core_inner_diameter"]])
+            ((data_matrix[:, self.param["total_flux_max"]] / (
+                    fmt.mu_0 * data_matrix[:, self.param["mu_r_abs"]])) ** 2) * \
+            (1 / (2 * np.pi * data_matrix[:, self.param["core_h_middle"]])) * np.log(
+                (data_matrix[:, self.param["r_inner"]] * 2) / \
+                data_matrix[:, self.param["core_inner_diameter"]])
         p_hyst_density_outer = p_hyst_outer * volume_outer
-        total_hyst_loss = p_hyst_density_center + (2 * p_hyst_density_middle) + p_hyst_density_outer
+        # total_hyst_loss = p_hyst_density_center + (2 * p_hyst_density_middle) + p_hyst_density_outer
+
+        # Set numpy print options to print the full array
+        # np.set_printoptions(threshold=1400)
+
+        total_hyst_loss = self.power_loss_cal(data_matrix)
 
         # Winding loss (only DC loss)
         dc_resistance_wire = (data_matrix[:, self.param["no_of_turns"]] * 2 * np.pi * (data_matrix[:,
-                                                                                       self.param["core_inner_diameter"]] / 2 + \
-                                                                                       data_matrix[:, self.param["conductor_radius"]])) / \
-            (self.copper_conductivity * (np.pi * (data_matrix[:, self.param["conductor_radius"]] ** 2)))
+                                                                                       self.param[
+                                                                                           "core_inner_diameter"]] / 2 + \
+                                                                                       data_matrix[:, self.param[
+                                                                                                          "conductor_radius"]])) / \
+                             (self.copper_conductivity * (
+                                     np.pi * (data_matrix[:, self.param["conductor_radius"]] ** 2)))
 
         # I^2 * R loss. Calculation from PEAK current, so division by 2 is needed
-        dc_wire_loss = ((self.peak_current ** 2) / 2) * dc_resistance_wire       # Assuming sinusoidal current waveform
+        # dc_wire_loss = ((self.peak_current ** 2) / 2) * dc_resistance_wire       # Assuming sinusoidal current waveform
+
+        # I_rms^2 * R loss - 30% higher considering proximity effect
+        dc_wire_loss = 1.3 * (self.rms_current ** 2) * dc_resistance_wire
+
+        print(f'size of dc_wire_loss:{np.size(dc_wire_loss)},\nmin of dc_wire_loss:{np.min(dc_wire_loss)},'
+              f'\nmax of dc_wire_loss:{np.max(dc_wire_loss)},\ndc_wire_loss:{dc_wire_loss}')
 
         total_hyst_dc_loss = dc_wire_loss + total_hyst_loss
         max_total_loss = max(total_hyst_dc_loss)
@@ -853,17 +889,85 @@ class AutomatedDesign:
         max_core_2daxi_volume = max(core_2daxi_volume)
         normalized_core_2daxi_volume = core_2daxi_volume / max_core_2daxi_volume
 
-        data_matrix = self.add_column_to_data_matrix(data_matrix, total_hyst_loss, 'total_hyst_loss')               # 26
-        data_matrix = self.add_column_to_data_matrix(data_matrix, dc_wire_loss, 'dc_wire_loss')                               # 27
-        data_matrix = self.add_column_to_data_matrix(data_matrix, total_hyst_dc_loss, 'total_loss')                         # 28
-        data_matrix = self.add_column_to_data_matrix(data_matrix, normalized_total_loss, 'normalized_total_loss')   # 29
-        data_matrix = self.add_column_to_data_matrix(data_matrix, core_2daxi_volume, 'total_volume')                     # 30
-        data_matrix = self.add_column_to_data_matrix(data_matrix, normalized_core_2daxi_volume, 'normalized_total_volume')   # 31
+        data_matrix = self.add_column_to_data_matrix(data_matrix, total_hyst_loss, 'total_hyst_loss')  # 26
+        data_matrix = self.add_column_to_data_matrix(data_matrix, dc_wire_loss, 'dc_wire_loss')  # 27
+        data_matrix = self.add_column_to_data_matrix(data_matrix, total_hyst_dc_loss, 'total_loss')  # 28
+        data_matrix = self.add_column_to_data_matrix(data_matrix, normalized_total_loss, 'normalized_total_loss')  # 29
+        data_matrix = self.add_column_to_data_matrix(data_matrix, core_2daxi_volume, 'total_volume')  # 30
+        data_matrix = self.add_column_to_data_matrix(data_matrix, normalized_core_2daxi_volume,
+                                                     'normalized_total_volume')  # 31
 
         data_matrix = data_matrix[data_matrix[:, self.param["total_loss"]].argsort()]
         data_matrix = data_matrix[0:int((self.percent_of_total_loss / 100) * len(data_matrix)), :]
 
         return data_matrix
+
+    def power_loss_cal(self, data_matrix):
+        import pandas as pd
+        import magnethub as mh
+        import femmt.functions_reluctance as fr
+
+        mdl = mh.loss.LossModel(material="3C95", team="paderborn")
+        df = pd.read_csv('currents_shifted.csv')
+        t = df['# t']
+        i_Lc1 = df['i_Lc1']
+        total_points = len(i_Lc1)
+        step_size = total_points // 1024
+        i_Lc1_sampled = np.array(i_Lc1[::step_size][:1024])
+        mu_r = 3000
+
+        r_gap = fr.r_air_gap_round_round(data_matrix[:, self.param["air_gap_h"]],
+                                         (data_matrix[:, self.param["core_inner_diameter"]]),
+                                         (data_matrix[:, self.param["core_h"]]) * 0.5,
+                                         (data_matrix[:, self.param["core_h"]]) * 0.5)
+        r_top = fr.r_core_top_bot_radiant((data_matrix[:, self.param["core_inner_diameter"]]),
+                                          (data_matrix[:, self.param["window_w"]]),
+                                          mu_r,
+                                          (data_matrix[:, self.param["core_inner_diameter"]]) * 0.25)
+        r_round = fr.r_core_round((data_matrix[:, self.param["core_inner_diameter"]]),
+                                  (data_matrix[:, self.param["window_h"]]),
+                                  mu_r)
+        r_core = 2 * r_top + 2 * r_round
+        r_total = r_core + r_gap
+        core_area = ((data_matrix[:, self.param["core_inner_diameter"]]) * 0.5) ** 2 * np.pi
+
+        core_volume = self.calculate_core_volume(data_matrix)
+        # print('==================================')
+        # print(f'core_Volume size:{np.size(core_volume)}, core_volume:{core_volume}')
+
+        b_wave_fac_matrix = data_matrix[:, self.param["no_of_turns"]] / (r_total * core_area)
+
+        Power_Density_loss = np.zeros(len(b_wave_fac_matrix))
+        for idx, b_fac in enumerate(b_wave_fac_matrix):
+            b_wave = b_fac * i_Lc1_sampled
+            # Get power loss in W/m³ and estimated H wave in A/m for each b_waves
+            Power_Density_loss[idx], h = mdl(b_wave, self.frequency, self.temperature)
+        # print('==================================')
+        # print(f'size of Power_Density_loss :{np.size(Power_Density_loss)},\nPower_Density_loss:{Power_Density_loss/1000}')
+        Power_loss = np.multiply(Power_Density_loss, core_volume)
+
+        print(f'size of Power_loss:{np.size(Power_loss)},\nmin of Power_loss:{np.min(Power_loss)},'
+              f'\nmax of Power_loss:{np.max(Power_loss)},\nPower_loss:{Power_loss}')
+        print('==================================')
+
+        return Power_loss
+
+    def calculate_core_volume(self, data_matrix):
+        """Calculate the volume of the core excluding air.
+
+        :return: Volume of the core.
+        :rtype: float
+        """
+        core_height = data_matrix[:, self.param["core_h"]] + data_matrix[:, self.param["core_inner_diameter"]] / 2
+        winding_height = data_matrix[:, self.param["window_h"]]
+        core_width = data_matrix[:, self.param["r_outer"]]
+        winding_width = data_matrix[:, self.param["window_w"]]
+        inner_leg_width = data_matrix[:, self.param["core_inner_diameter"]] / 2
+
+        air_gap_volume = np.pi * inner_leg_width ** 2 * data_matrix[:, self.param["air_gap_h"]]
+
+        return np.pi * (core_width ** 2 * core_height - (inner_leg_width + winding_width) ** 2 * winding_height
+                        + inner_leg_width ** 2 * winding_height) - air_gap_volume
 
     def pareto_front_from_data_matrix(self, data_matrix):
         """Get the pareto front from the data matrix."""
@@ -929,10 +1033,11 @@ class AutomatedDesign:
             geo = fmt.MagneticComponent(component_type=self.component_type_dict[self.magnetic_component],
                                         working_directory=self.femmt_working_directory, verbosity=fmt.Verbosity.Silent)
 
-            core_dimensions = fmt.dtos.SingleCoreDimensions(core_inner_diameter=self.data_matrix_fem[count, self.param["core_inner_diameter"]],
-                                                            window_w=self.data_matrix_fem[count, self.param["window_w"]],
-                                                            window_h=self.data_matrix_fem[count, self.param["window_h"]],
-                                                            core_h=self.data_matrix_fem[count, self.param["core_h"]])
+            core_dimensions = fmt.dtos.SingleCoreDimensions(
+                core_inner_diameter=self.data_matrix_fem[count, self.param["core_inner_diameter"]],
+                window_w=self.data_matrix_fem[count, self.param["window_w"]],
+                window_h=self.data_matrix_fem[count, self.param["window_h"]],
+                core_h=self.data_matrix_fem[count, self.param["core_h"]])
 
             core = fmt.Core(core_type=fmt.CoreType.Single,
                             core_dimensions=core_dimensions,
@@ -985,17 +1090,22 @@ class AutomatedDesign:
             if np.isnan(self.data_matrix_fem[count, self.param["solid_conductor_r"]]):
                 winding.set_litz_round_conductor(
                     conductor_radius=None if np.isnan(
-                        self.data_matrix_fem[count, self.param["litz_conductor_r"]]) else self.data_matrix_fem[count, self.param["litz_conductor_r"]],
+                        self.data_matrix_fem[count, self.param["litz_conductor_r"]]) else self.data_matrix_fem[
+                        count, self.param["litz_conductor_r"]],
                     number_strands=None if np.isnan(
-                        self.data_matrix_fem[count, self.param["litz_strand_n"]]) else self.data_matrix_fem[count, self.param["litz_strand_n"]],
+                        self.data_matrix_fem[count, self.param["litz_strand_n"]]) else self.data_matrix_fem[
+                        count, self.param["litz_strand_n"]],
                     strand_radius=None if np.isnan(
-                        self.data_matrix_fem[count, self.param["litz_strand_r"]]) else self.data_matrix_fem[count, self.param["litz_strand_r"]],
+                        self.data_matrix_fem[count, self.param["litz_strand_r"]]) else self.data_matrix_fem[
+                        count, self.param["litz_strand_r"]],
                     fill_factor=None if np.isnan(
-                        self.data_matrix_fem[count, self.param["litz_fill_factor"]]) else self.data_matrix_fem[count, self.param["litz_fill_factor"]],
+                        self.data_matrix_fem[count, self.param["litz_fill_factor"]]) else self.data_matrix_fem[
+                        count, self.param["litz_fill_factor"]],
                     conductor_arrangement=self.winding_scheme_dict[self.winding_scheme][1])
             else:
-                winding.set_solid_round_conductor(conductor_radius=self.data_matrix_fem[count, self.param["solid_conductor_r"]],
-                                                  conductor_arrangement=self.winding_scheme_dict[self.winding_scheme][1])
+                winding.set_solid_round_conductor(
+                    conductor_radius=self.data_matrix_fem[count, self.param["solid_conductor_r"]],
+                    conductor_arrangement=self.winding_scheme_dict[self.winding_scheme][1])
 
             # 7. add conductor to vww and add winding window to MagneticComponent
             vww.set_winding(winding, int(self.data_matrix_fem[count, self.param["no_of_turns"]]), None)
@@ -1006,10 +1116,12 @@ class AutomatedDesign:
                 geo.create_model(freq=self.frequency, pre_visualize_geometry=False, save_png=False)
 
                 # 6. start simulation
-                geo.single_simulation(freq=self.frequency, current=[self.peak_current], show_fem_simulation_results=False)
+                geo.single_simulation(freq=self.frequency, current=[self.peak_current],
+                                      show_fem_simulation_results=False)
 
                 source_json_file = os.path.join(self.femmt_working_directory, "results", "log_electro_magnetic.json")
-                destination_json_file = os.path.join(self.inductor_fem_simulations_results_directory, f'case_{count}.json')
+                destination_json_file = os.path.join(self.inductor_fem_simulations_results_directory,
+                                                     f'case_{count}.json')
 
                 shutil.copy(source_json_file, destination_json_file)
 
@@ -1077,6 +1189,7 @@ class AutomatedDesign:
             "goal_inductance_percent_tolerance": self.goal_inductance_percent_tolerance,
             "winding_scheme": self.winding_scheme,
             "peak_current": self.peak_current,
+            "rms_current": self.rms_current,
             "percent_of_b_sat": self.percent_of_b_sat,
             "percent_of_total_loss": self.percent_of_total_loss,
             "database_core_names": self.database_core_names,
@@ -1102,7 +1215,8 @@ class AutomatedDesign:
             "manual_litz_fill_factor": self.manual_litz_fill_factor
         }
 
-        with open(os.path.join(self.working_directory, "automated_design_settings.json"), "w+", encoding='utf-8') as outfile:
+        with open(os.path.join(self.working_directory, "automated_design_settings.json"), "w+",
+                  encoding='utf-8') as outfile:
             json.dump(dictionary, outfile, indent=2, ensure_ascii=False)
 
 
@@ -1137,22 +1251,24 @@ if __name__ == '__main__':
 
         ad = AutomatedDesign(working_directory=working_directory,
                              magnetic_component='inductor',
-                             target_inductance=300 * 1e-6,
+                             target_inductance=675 * 1e-6,
                              frequency=200000,
-                             target_inductance_percent_tolerance=10,
+                             target_inductance_percent_tolerance=5,
                              winding_scheme='Square',
-                             peak_current=4,
+                             peak_current=2.909,
+                             rms_current=1.0, # RMS current value from GeckoCIRCUITS - rms of i_Lc1: 0.9823703454676544
                              percent_of_flux_density_saturation=70,
                              percent_of_total_loss=30,
                              database_core_names=[],
-                             database_litz_names=["1.5x105x0.1", "1.4x200x0.071", "1.1x60x0.1", "1.35x200x0.071", "1.8x512x0.05"],
+                             database_litz_names=["0.85x18x0.1", "1.1x32x0.1", "1.5x64x0.1"],
                              solid_conductor_r=[],  # 0.0013
-                             manual_core_inner_diameter=list(np.linspace(min_core['core_inner_diameter'], max_core['core_inner_diameter'], 7)),
-                             manual_window_h=list(np.linspace(min_core['window_h'], max_core['window_h'], 7)),
-                             manual_window_w=list(np.linspace(min_core['window_w'], max_core['window_w'], 7)),
-                             no_of_turns=np.arange(1, 80).tolist(),
+                             manual_core_inner_diameter=list(
+                                 np.linspace(min_core['core_inner_diameter'], max_core['core_inner_diameter'], 20)),
+                             manual_window_h=list(np.linspace(min_core['window_h'], max_core['window_h'], 20)),
+                             manual_window_w=list(np.linspace(min_core['window_w'], max_core['window_w'], 20)),
+                             no_of_turns=np.arange(1, 50).tolist(),
                              n_air_gaps=[1],
-                             air_gap_height=list(np.linspace(0.001, 0.0015, 15)),
+                             air_gap_height=list(np.linspace(0.0001, 0.002, 50)),
                              air_gap_position=[50],
                              core_material=[fmt.Material.N95],
                              mult_air_gap_type=['center_distributed'],
@@ -1176,9 +1292,12 @@ if __name__ == '__main__':
                 x_label='Volume / m\u00b3', y_label='Loss / W', title='Volume vs Loss', plot_color='blue')
 
         print(f"Total number of cases to be simulated: {len(ad.data_matrix_fem)}")
-        print(f"Estimated time of completion of FEM simulations (5 sec/case): {5 * len(ad.data_matrix_fem) / 60 / 60} hours")
-        print("##########################################################################################################")
-        choice = int(input("Press 1 to run FEM simulations as per the given inputs or any other number to load previous design as per given directory:"))
+        print(
+            f"Estimated time of completion of FEM simulations (5 sec/case): {5 * len(ad.data_matrix_fem) / 60 / 60} hours")
+        print(
+            "##########################################################################################################")
+        choice = int(input(
+            "Press 1 to run FEM simulations as per the given inputs or any other number to load previous design as per given directory:"))
 
         if choice == 1:
             # Save simulation settings in json file for later review
@@ -1194,8 +1313,10 @@ if __name__ == '__main__':
         inductance, total_loss, total_volume, total_cost, annotation_list, automated_design_settings = load_fem_simulation_results(
             working_directory=working_directory)
 
-        plot_data = filter_after_fem(inductance=inductance, total_loss=total_loss, total_volume=total_volume, total_cost=total_cost,
-                                     annotation_list=annotation_list, goal_inductance=automated_design_settings["goal_inductance"], percent_tolerance=20)
+        plot_data = filter_after_fem(inductance=inductance, total_loss=total_loss, total_volume=total_volume,
+                                     total_cost=total_cost,
+                                     annotation_list=annotation_list,
+                                     goal_inductance=automated_design_settings["goal_inductance"], percent_tolerance=20)
 
         plot_2d(x_value=plot_data[:, 1], y_value=plot_data[:, 2], z_value=plot_data[:, 3],
                 x_label='Volume / m\u00b3', y_label='Loss / W', z_label='Cost / \u20ac', title='Volume vs Loss',

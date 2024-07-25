@@ -1,8 +1,8 @@
 Include "Parameter.pro";
 Function{
-  b = {np.float64(0.0), np.float64(0.14285714285714285), np.float64(0.2857142857142857), np.float64(0.42857142857142855), np.float64(0.5714285714285714), np.float64(0.7142857142857142), np.float64(0.8571428571428571), np.float64(1.0)} ;
-  mu_real = {np.float64(3000.0), np.float64(2981.632857142857), np.float64(2937.4157142857143), np.float64(1.0), np.float64(1.0), np.float64(1.0), np.float64(1.0), np.float64(1.0)} ;
-  mu_imag = {np.float64(1.0), np.float64(321.68142857142857), np.float64(604.3842857142856), np.float64(636.25), np.float64(636.25), np.float64(636.25), np.float64(636.25), np.float64(636.25)} ;
+  b = {0.0, 0.14285714285714285, 0.2857142857142857, 0.42857142857142855, 0.5714285714285714, 0.7142857142857142, 0.8571428571428571, 1.0} ;
+  mu_real = {3000.0, 2981.632857142857, 2937.4157142857143, 1.0, 1.0, 1.0, 1.0, 1.0} ;
+  mu_imag = {1.0, 321.68142857142857, 604.3842857142856, 636.25, 636.25, 636.25, 636.25, 636.25} ;
   mu_imag_couples = ListAlt[b(), mu_imag()] ;
   mu_real_couples = ListAlt[b(), mu_real()] ;
   f_mu_imag_d[] = InterpolationLinear[Norm[$1]]{List[mu_imag_couples]};
