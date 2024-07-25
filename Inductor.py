@@ -58,7 +58,7 @@ def load_from_single_file(working_directory: str, file_name: str):
 
     geo.create_model(freq=frequency, pre_visualize_geometry=False, save_png=False)
 
-    geo.single_simulation(freq=frequency, current=[current], show_fem_simulation_results=True)
+    geo.single_simulation(freq=frequency, current=[current], show_fem_simulation_results=False)#True)
 
 
 def plot_2d(x_value: list, y_value: list, x_label: str, y_label: str, title: str, plot_color: str, z_value: list = None,
@@ -177,7 +177,7 @@ def plot_2d(x_value: list, y_value: list, x_label: str, y_label: str, title: str
 
     fig.canvas.mpl_connect("motion_notify_event", hover)
     ax.grid()
-    plt.show()
+    # plt.show()
 
 
 def plot_3d(x_value: list, y_value: list, z_value: list, x_label: str, y_label: str, z_label: str,
@@ -304,7 +304,7 @@ def plot_3d(x_value: list, y_value: list, z_value: list, x_label: str, y_label: 
         annotate_plot(X, closestIndex)
 
     fig.canvas.mpl_connect('motion_notify_event', on_mouse_motion)  # on mouse motion
-    plt.show()
+    # plt.show()
 
 
 def filter_after_fem(inductance: list, total_loss: list, total_volume: list, total_cost: list,
