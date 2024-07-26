@@ -58,7 +58,7 @@ def load_from_single_file(working_directory: str, file_name: str):
 
     geo.create_model(freq=frequency, pre_visualize_geometry=False, save_png=False)
 
-    geo.single_simulation(freq=frequency, current=[current], show_fem_simulation_results=False)#True)
+    geo.single_simulation(freq=frequency, current=[current], show_fem_simulation_results=False)  #True)
 
 
 def plot_2d(x_value: list, y_value: list, x_label: str, y_label: str, title: str, plot_color: str, z_value: list = None,
@@ -520,8 +520,11 @@ class AutomatedDesign:
         # Set core-geometry from core database or/and manual entry
         self.database_core_names = database_core_names
         self.manual_core_inner_diameter = manual_core_inner_diameter
+        # print(f'dia:{manual_core_inner_diameter}')
         self.manual_window_h = manual_window_h
+        # print(f'h:{manual_window_h}')
         self.manual_window_w = manual_window_w
+        # print(f'w:{manual_window_w}')
 
         # Set winding settings (Solid and Litz winding type)
         self.database_litz_names = database_litz_names
@@ -772,7 +775,7 @@ class AutomatedDesign:
         else:
             raise Exception("Please input at least one conductor type")
 
-        print(f'window_h: {final_data_matrix[:, self.param["window_h"]]}')
+        # print(f'window_h: {final_data_matrix[:, self.param["window_h"]]}')
 
         # Filter based on the geometry
         window_area = final_data_matrix[:, self.param["window_h"]] * final_data_matrix[:, self.param["window_w"]]
@@ -880,8 +883,8 @@ class AutomatedDesign:
         # I_rms^2 * R loss - 30% higher considering proximity effect
         dc_wire_loss = 1.3 * (self.rms_current ** 2) * dc_resistance_wire
 
-        print(f'size of dc_wire_loss:{np.size(dc_wire_loss)},\nmin of dc_wire_loss:{np.min(dc_wire_loss)},'
-              f'\nmax of dc_wire_loss:{np.max(dc_wire_loss)},\ndc_wire_loss:{dc_wire_loss}')
+        # print(f'size of dc_wire_loss:{np.size(dc_wire_loss)},\nmin of dc_wire_loss:{np.min(dc_wire_loss)},'
+        #       f'\nmax of dc_wire_loss:{np.max(dc_wire_loss)},\ndc_wire_loss:{dc_wire_loss}')
 
         total_hyst_dc_loss = dc_wire_loss + total_hyst_loss
         max_total_loss = max(total_hyst_dc_loss)
@@ -948,9 +951,9 @@ class AutomatedDesign:
         # print(f'size of Power_Density_loss :{np.size(Power_Density_loss)},\nPower_Density_loss:{Power_Density_loss/1000}')
         Power_loss = np.multiply(Power_Density_loss, core_volume)
 
-        print(f'size of Power_loss:{np.size(Power_loss)},\nmin of Power_loss:{np.min(Power_loss)},'
-              f'\nmax of Power_loss:{np.max(Power_loss)},\nPower_loss:{Power_loss}')
-        print('==================================')
+        # print(f'size of Power_loss:{np.size(Power_loss)},\nmin of Power_loss:{np.min(Power_loss)},'
+        #       f'\nmax of Power_loss:{np.max(Power_loss)},\nPower_loss:{Power_loss}')
+        # print('==================================')
 
         return Power_loss
 
@@ -1257,18 +1260,31 @@ if __name__ == '__main__':
                              frequency=200000,
                              target_inductance_percent_tolerance=20,
                              winding_scheme='Square',
-                             peak_current=2.909,
-                             rms_current=1.0, # RMS current value from GeckoCIRCUITS - rms of i_Lc1: 0.9823703454676544
+                             peak_current=1.5,
+                             rms_current=1.0,  # RMS current value from GeckoCIRCUITS - rms of i_Lc1: 0.9823703454676544
                              percent_of_flux_density_saturation=70,
                              percent_of_total_loss=30,
                              database_core_names=[],
-                             database_litz_names=["0.85x18x0.1", "1.1x32x0.1", "1.5x64x0.1"],
+                             database_litz_names=["1.1x60x0.1", "1.4x200x0.071", "1.35x200x0.071",
+                                                  "1.5x105x0.1", "1.8x512x0.05", "1.71x140x0.1", "1.7x500x0.06"],
                              solid_conductor_r=[],  # 0.0013
-                             manual_core_inner_diameter=list(
-                                 np.linspace(min_core['core_inner_diameter'], max_core['core_inner_diameter'], 10)),
-                             manual_window_h=list(np.linspace(min_core['window_h'], max_core['window_h'], 10)),
-                             manual_window_w=list(np.linspace(min_core['window_w'], max_core['window_w'], 10)),
-                             no_of_turns=np.arange(30, 80).tolist(),
+                             # manual_core_inner_diameter=list(
+                             #     np.linspace(min_core['core_inner_diameter'], max_core['core_inner_diameter'], 10)),
+                             manual_core_inner_diameter=[pq1611['core_inner_diameter'], pq2016['core_inner_diameter'],
+                                                         pq2020['core_inner_diameter'], pq2620['core_inner_diameter'],
+                                                         pq2625['core_inner_diameter'], pq3220['core_inner_diameter'],
+                                                         pq3230['core_inner_diameter'], pq3535['core_inner_diameter']],
+                             # manual_window_h=list(np.linspace(min_core['window_h'], max_core['window_h'], 10)),
+                             manual_window_h=[pq1611['window_h'], pq2016['window_h'],
+                                              pq2020['window_h'], pq2620['window_h'],
+                                              pq2625['window_h'], pq3220['window_h'],
+                                              pq3230['window_h'], pq3535['window_h']],
+                             # manual_window_w=list(np.linspace(min_core['window_w'], max_core['window_w'], 10)),
+                             manual_window_w=[pq1611['window_w'], pq2016['window_w'],
+                                              pq2020['window_w'], pq2620['window_w'],
+                                              pq2625['window_w'], pq3220['window_w'],
+                                              pq3230['window_w'], pq3535['window_w']],
+                             no_of_turns=np.arange(10, 80).tolist(),
                              n_air_gaps=[1],
                              air_gap_height=list(np.linspace(0.0001, 0.002, 5)),
                              air_gap_position=[50],
@@ -1278,7 +1294,7 @@ if __name__ == '__main__':
                              bot_core_insulation=0.0022,
                              left_core_insulation=0.002,
                              right_core_insulation=0.002,
-                             inner_winding_insulation=0.0001, #0.00005
+                             inner_winding_insulation=0.00005,
                              temperature=100.0,
                              manual_litz_conductor_r=[],
                              manual_litz_strand_r=[],
