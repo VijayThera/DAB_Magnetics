@@ -40,7 +40,7 @@ DAB_transformer_config = fmt.StoSingleInputConfig(
     # operating point: current waveforms and temperature
     time_current_1_vec=np.array(i_1),
     time_current_2_vec=np.array(i_2),
-    temperature=70,
+    temperature=100,
 
     # sweep parameters: geometry and materials
     primary_coil_turns_min_max_list=[2,20],

@@ -6,6 +6,7 @@ import magnethub as mh
 import femmt as fmt
 import femmt.functions_reluctance as fr
 from pandas.plotting import table
+from scipy.integrate import quad
 
 # core_height = 11.6e-3 + 7e-3 / 2
 # winding_height = 6.7e-3
@@ -275,113 +276,147 @@ from pandas.plotting import table
 # threshold = 1.5e-6
 # filter_and_print_small_areas(threshold)
 
-# mdl = mh.loss.LossModel(material="3C95", team="paderborn")
-# freq = 200e3
-# temp = 100
-#
-# df = pd.read_csv('currents_shifted.csv')
-# time = df['# t']
-# i_Lc1 = df['i_Lc1']
-# total_points = len(i_Lc1)
-# # print(total_points)
-# step_size = total_points // 1024
-# i_Lc1_sampled = i_Lc1[::step_size][:1024]
-# time_sampled = time[::step_size][:1024]
-# i_Lc1_sampled = np.array(i_Lc1_sampled)
-# time_sampled = np.array(time_sampled)
-# # print(f'I_max:{np.nanmax(i_Lc1_sampled)}')
-#
-# mu_o = 4e-7 * np.pi
-# mu_r = 3000
-# n = 10
-# l_gap = 2e-3
-#
-# core_database = fmt.core_database()
-# pq1611 = core_database["PQ 16/11.6"]
-#
-# core_inner_diameter = pq1611['core_inner_diameter']
-# core_height_upper = pq1611['core_h'] / 2
-# core_height_lower = pq1611['core_h'] / 2
-# window_w = pq1611['window_w']
-# core_round_height = pq1611['window_h']
-# core_top_bot_height = core_inner_diameter / 4
-#
-# r_gap = fr.r_air_gap_round_round(l_gap, core_inner_diameter, core_height_upper, core_height_lower)
-# r_top = fr.r_core_top_bot_radiant(core_inner_diameter, window_w, mu_r, core_top_bot_height)
-# r_round = fr.r_core_round(core_inner_diameter, core_round_height, mu_r)
-# r_core = 2 * r_top + 2 * r_round
-# r_total = r_core + r_gap
-# core_area = (core_inner_diameter / 2) ** 2 * np.pi
-#
-# L = n**2/r_total
-#
-# print(f'L:{L}')
+##======================================================================================================================
+def cos_power(x):
+    return np.abs(np.cos(x)) ** 1.5
 
-# b_wave1 = n * i_Lc1_sampled / (r_total * core_area)
-# # print(f'B_max:{np.nanmax(b_wave1)}')
-#
-# # get power loss in W/m³ and estimated H wave in A/m
-# p, h = mdl(b_wave1, freq, temp)
-# print(f'p:{p/1000} kW/m³')
-#
-# # Plotting the data
-# plt.figure(figsize=(12, 6))
-# # Current vs Time plot
-# plt.subplot(2, 1, 1)
-# plt.plot(time_sampled, i_Lc1_sampled, label='i_Lc1 (Current)')
-# plt.xlabel('Time (s)')
-# plt.ylabel('Current (A)')
-# plt.title('Current vs Time')
-# plt.legend()
-# plt.grid(True)
-#
-# # B wave vs Time plot
-# plt.subplot(2, 1, 2)
-# plt.plot(time_sampled, b_wave1, label='b_wave (Magnetic Flux Density)', color='r')
-# plt.xlabel('Time (s)')
-# plt.ylabel('Magnetic Flux Density (T)')
-# plt.title('Magnetic Flux Density vs Time')
-# plt.legend()
-# plt.grid(True)
-#
-# plt.tight_layout()
-# # plt.show()
+k = 1.36148085
+a = 1.49789876
+b = 2.87767503
+D = 0.50
+integral_value, error = quad(cos_power, 0, 2 * np.pi)
+g = 2 * (D ** (1 - a) + (1 - D) ** (1 - a)) / (np.pi ** (a - 1) * integral_value)
+# print(f'g(a:1.50, D:0.25) = {2 * (0.25 ** (1 - 1.5) + (1 - 0.25) ** (1 - 1.5)) / (np.pi ** (1.5 - 1) * integral_value):.3f}')
+print(f'g(a:{a}, D:{D:.2f}) = {g:.3f}')
+
+mdl = mh.loss.LossModel(material="3C95", team="paderborn")
+freq = 200e3
+temp = 100
+num_samples = 1024
+
+df = pd.read_csv('currents_shifted.csv')
+time = df['# t']
+i_Lc1 = df['i_Lc1']
+total_points = len(i_Lc1)
+# print(total_points)
+step_size = total_points // num_samples
+i_Lc1_sampled = i_Lc1[::step_size][:num_samples]
+time_sampled = time[::step_size][:num_samples]
+i_Lc1_sampled = np.array(i_Lc1_sampled)
+time_sampled = np.array(time_sampled)
+# print(f'I_max:{np.nanmax(i_Lc1_sampled)}')
 
 mu_o = 4e-7 * np.pi
 mu_r = 3000
-n_range = np.arange(1, 101)
-l_gap_range = np.linspace(0.1e-3, 2e-3, 100)
+n = 50
+l_gap = 0.001269
 
 core_database = fmt.core_database()
-core = core_database["PQ 20/20"]
+core = core_database["PQ 35/35"]
 
 core_inner_diameter = core['core_inner_diameter']
-core_height_upper = core['core_h'] / 2
-core_height_lower = core['core_h'] / 2
+core_height_upper = 0.024041666666666666 / 2 #core['core_h'] / 2
+core_height_lower = 0.024041666666666666 / 2 #core['core_h'] / 2
 window_w = core['window_w']
-core_round_height = core['window_h']
+core_round_height = 0.016866666666666665 #pq1611['window_h']
 core_top_bot_height = core_inner_diameter / 4
 
-def calculate_r_total(l_gap):
-    r_gap = fr.r_air_gap_round_round(l_gap, core_inner_diameter, core_height_upper, core_height_lower)
-    r_top = fr.r_core_top_bot_radiant(core_inner_diameter, window_w, mu_r, core_top_bot_height)
-    r_round = fr.r_core_round(core_inner_diameter, core_round_height, mu_r)
-    r_core = 2 * r_top + 2 * r_round
-    r_total = r_core + r_gap
-    return r_total
+r_gap = fr.r_air_gap_round_round(l_gap, core_inner_diameter, core_height_upper, core_height_lower)
+r_top = fr.r_core_top_bot_radiant(core_inner_diameter, window_w, mu_r, core_top_bot_height)
+r_round = fr.r_core_round(core_inner_diameter, core_round_height, mu_r)
+r_core = 0.5 * r_top + 2 * r_round
+r_total = r_core + r_gap
+# print(f'r_total: {r_total:.3f}')
+core_area = (core_inner_diameter / 2) ** 2 * np.pi
 
-def find_turns_and_gap(target_inductance):
-    results = []
-    for n in n_range:
-        for l_gap in l_gap_range:
-            r_total = calculate_r_total(l_gap)
-            L = n**2 / r_total
-            if np.isclose(L, target_inductance, rtol=1e-2):  # 1% relative tolerance
-                results.append((n, r_total, l_gap, L))
-    return results
+L = n**2/r_total
+# print(f'Inductance:{L}')
 
-target_inductance = 680e-6
-results = find_turns_and_gap(target_inductance)
+period = 1 / freq
+t = np.linspace(0, period, num_samples, endpoint=False)
+b_wave_sine = n * (np.nanmax(i_Lc1_sampled) * np.sin(2 * np.pi * freq * t - np.pi / 2)) / (r_total * core_area)
 
-for result in results:
-    print(f"Turns: {result[0]}, r_total: {result[1]:.0f} Air Gap: {result[2]:.4f} m, Inductance: {result[3]:.2e} H")
+# get power loss in W/m³ and estimated H wave in A/m
+p_sine, _ = mdl(b_wave_sine, freq, temp)
+
+p_sine_se = k * (freq**a) * (np.nanmax(b_wave_sine)**b)
+
+b_wave_triangle = n * i_Lc1_sampled / (r_total * core_area)
+p_triangle, _ = mdl(b_wave_triangle, freq, temp)
+
+p_triangle_se = p_sine_se * g
+
+print(f'Power Density - sine (using MagNet) :   {p_sine/1000:.2f} kW/m³, Power loss: {p_sine*2.3223742062601302e-05:.2f} W')
+print(f'Power Density - sine (using Steinmetz): {p_sine_se/1000:.2f} kW/m³, Power loss: {p_sine_se*2.3223742062601302e-05:.2f} W')
+print(f'error: {abs(p_sine-p_sine_se) * 100/p_sine_se} %\n')
+print(f'Power Density - tri. (using MagNet) :   {p_triangle/1000:.2f} kW/m³, Power loss: {p_triangle*2.3223742062601302e-05:.2f} W')
+print(f'Power Density - tri. (using Steinmetz): {p_triangle_se/1000:.2f} kW/m³, Power loss: {p_triangle_se*2.3223742062601302e-05:.2f} W')
+
+# print(f'traingular power_density should be = {g*p_sine_se/1000:.2f} kW/m³ , but Calc. traingular power_density is = {p_triangle/1000:.2f} kW/m³')
+print(f'Calc. g(a, D) from p_triangle(MagNet)/p_sine(Steinmetz): {p_triangle/p_sine_se:.3f}')
+
+
+# Plotting the data
+plt.figure(figsize=(12, 6))
+# Current vs Time plot
+plt.subplot(2, 1, 1)
+plt.plot(time_sampled, i_Lc1_sampled, label='i_Lc1 (Current)')
+plt.xlabel('Time (s)')
+plt.ylabel('Current (A)')
+plt.title('Current vs Time')
+plt.legend()
+plt.grid(True)
+
+# B wave vs Time plot
+plt.subplot(2, 1, 2)
+plt.plot(time_sampled, b_wave_triangle, label='b_wave_triangle', color='r')
+plt.plot(time_sampled, b_wave_sine, label='b_wave_sine', color='b')
+plt.xlabel('Time (s)')
+plt.ylabel('Magnetic Flux Density (T)')
+plt.title('Magnetic Flux Density vs Time')
+plt.legend()
+plt.grid(True)
+
+plt.tight_layout()
+# plt.show()
+
+##======================================================================================================================
+
+# mu_o = 4e-7 * np.pi
+# mu_r = 3000
+# n_range = np.arange(1, 101)
+# l_gap_range = np.linspace(0.1e-3, 2e-3, 100)
+#
+# core_database = fmt.core_database()
+# core = core_database["PQ 20/20"]
+#
+# core_inner_diameter = core['core_inner_diameter']
+# core_height_upper = core['core_h'] / 2
+# core_height_lower = core['core_h'] / 2
+# window_w = core['window_w']
+# core_round_height = core['window_h']
+# core_top_bot_height = core_inner_diameter / 4
+#
+# def calculate_r_total(l_gap):
+#     r_gap = fr.r_air_gap_round_round(l_gap, core_inner_diameter, core_height_upper, core_height_lower)
+#     r_top = fr.r_core_top_bot_radiant(core_inner_diameter, window_w, mu_r, core_top_bot_height)
+#     r_round = fr.r_core_round(core_inner_diameter, core_round_height, mu_r)
+#     r_core = 2 * r_top + 2 * r_round
+#     r_total = r_core + r_gap
+#     return r_total
+#
+# def find_turns_and_gap(target_inductance):
+#     results = []
+#     for n in n_range:
+#         for l_gap in l_gap_range:
+#             r_total = calculate_r_total(l_gap)
+#             L = n**2 / r_total
+#             if np.isclose(L, target_inductance, rtol=1e-2):  # 1% relative tolerance
+#                 results.append((n, r_total, l_gap, L))
+#     return results
+#
+# target_inductance = 680e-6
+# results = find_turns_and_gap(target_inductance)
+#
+# for result in results:
+#     print(f"Turns: {result[0]}, r_total: {result[1]:.0f} Air Gap: {result[2]:.4f} m, Inductance: {result[3]:.2e} H")
