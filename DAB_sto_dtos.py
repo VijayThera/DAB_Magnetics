@@ -33,7 +33,7 @@ class DABStoSingleInputConfig:
     """
 
     # target parameters
-    l_s12_target: float
+    l_s_target: float
     l_h_target: float
     n_target: float
 
@@ -43,21 +43,21 @@ class DABStoSingleInputConfig:
     temperature: float
 
     # sweep parameters: geometry and materials
+    material_list: list
     core_inner_diameter_min_max_list: list
     window_w_min_max_list: list
-    material_list: list
     window_h_bot_min_max_list: list
     window_h_top_min_max_list: list
 
     # conductor
     primary_litz_wire_list: list
-    N_p_top_min_max_list: list
-    N_p_bot_min_max_list: list
+    # N_p_top_min_max_list: list
+    # N_p_bot_min_max_list: list
     primary_fill_factor: float
 
     secondary_litz_wire_list: list
-    N_s_top_min_max_list: list
-    N_s_bot_min_max_list: list
+    # N_s_top_min_max_list: list
+    # N_s_bot_min_max_list: list
     secondary_fill_factor: float
 
     # maximum limitation for transformer total height and core volume
@@ -115,10 +115,10 @@ class DABStoTargetAndFixedParameters:
 
     i_rms_1: float
     i_rms_2: float
-    i_peak_1: float
-    i_peak_2: float
-    i_phase_deg_1: float
-    i_phase_deg_2: float
+    # i_peak_1: float
+    # i_peak_2: float
+    # i_phase_deg_1: float
+    # i_phase_deg_2: float
     material_dto_curve_list: List[MaterialCurve]
     time_extracted_vec: List
     current_extracted_1_vec: List
@@ -135,3 +135,40 @@ class DABCurrentWorkingPoint:
     name: str
     time_current_1_vec: Union[np.ndarray, list]
     time_current_2_vec: Union[np.ndarray, list]
+
+@dataclass
+class DABStoSingleResultFile:
+    """
+    Dataclass to store the reluctance model simulation results.
+
+    Contains concrete geometry parameters as well as the calculated results.
+    """
+
+    case: int
+    # geometry parameters
+    air_gap_top: float
+    air_gap_bot: float
+    n_p_top: int
+    n_p_bot: int
+    n_s_top: int
+    n_s_bot: int
+    window_h_top: float
+    window_h_bot: float
+    window_w: float
+    core_material: str
+    core_inner_diameter: float
+    primary_litz_wire: str
+    secondary_litz_wire: str
+
+    # reluctance model results
+    flux_top_max: float
+    flux_bot_max: float
+    flux_stray_max: float
+    flux_density_top_max: float
+    flux_density_bot_max: float
+    flux_density_stray_max: float
+    p_hyst: float
+    primary_litz_wire_loss: float
+    secondary_litz_wire_loss: float
+    core_2daxi_total_volume: float
+    total_loss: float

@@ -278,7 +278,7 @@ from scipy.integrate import quad
 
 ##======================================================================================================================
 def cos_power(x):
-    return np.abs(np.cos(x)) ** 1.5
+    return np.abs(np.cos(x)) ** 1.49789876
 
 k = 1.36148085
 a = 1.49789876
@@ -286,7 +286,7 @@ b = 2.87767503
 D = 0.50
 integral_value, error = quad(cos_power, 0, 2 * np.pi)
 g = 2 * (D ** (1 - a) + (1 - D) ** (1 - a)) / (np.pi ** (a - 1) * integral_value)
-# print(f'g(a:1.50, D:0.25) = {2 * (0.25 ** (1 - 1.5) + (1 - 0.25) ** (1 - 1.5)) / (np.pi ** (1.5 - 1) * integral_value):.3f}')
+print(f'g(a:1.50, D:0.25) = {2 * (0.25 ** (1 - 1.5) + (1 - 0.25) ** (1 - 1.5)) / (np.pi ** (1.5 - 1) * integral_value):.3f}')
 print(f'g(a:{a}, D:{D:.2f}) = {g:.3f}')
 
 mdl = mh.loss.LossModel(material="3C95", team="paderborn")
@@ -324,7 +324,7 @@ core_top_bot_height = core_inner_diameter / 4
 r_gap = fr.r_air_gap_round_round(l_gap, core_inner_diameter, core_height_upper, core_height_lower)
 r_top = fr.r_core_top_bot_radiant(core_inner_diameter, window_w, mu_r, core_top_bot_height)
 r_round = fr.r_core_round(core_inner_diameter, core_round_height, mu_r)
-r_core = 0.5 * r_top + 2 * r_round
+r_core = 2 * r_top + 2 * r_round
 r_total = r_core + r_gap
 # print(f'r_total: {r_total:.3f}')
 core_area = (core_inner_diameter / 2) ** 2 * np.pi
@@ -346,11 +346,12 @@ p_triangle, _ = mdl(b_wave_triangle, freq, temp)
 
 p_triangle_se = p_sine_se * g
 
-print(f'Power Density - sine (using MagNet) :   {p_sine/1000:.2f} kW/m³, Power loss: {p_sine*2.3223742062601302e-05:.2f} W')
-print(f'Power Density - sine (using Steinmetz): {p_sine_se/1000:.2f} kW/m³, Power loss: {p_sine_se*2.3223742062601302e-05:.2f} W')
-print(f'error: {abs(p_sine-p_sine_se) * 100/p_sine_se} %\n')
-print(f'Power Density - tri. (using MagNet) :   {p_triangle/1000:.2f} kW/m³, Power loss: {p_triangle*2.3223742062601302e-05:.2f} W')
-print(f'Power Density - tri. (using Steinmetz): {p_triangle_se/1000:.2f} kW/m³, Power loss: {p_triangle_se*2.3223742062601302e-05:.2f} W')
+print(f'Power Density - sine (using MagNet) :   {p_sine/1000:.2f} kW/m³, Power loss: {p_sine*2.32e-05:.2f} W')
+print(f'Power Density - sine (using Steinmetz): {p_sine_se/1000:.2f} kW/m³, Power loss: {p_sine_se*2.32e-05:.2f} W')
+print(f'error: {(p_sine-p_sine_se) * 100/p_sine_se:.2f} %\n')
+print(f'Power Density - tri. (using MagNet) :   {p_triangle/1000:.2f} kW/m³, Power loss: {p_triangle*2.32e-05:.2f} W')
+print(f'Power Density - tri. (using Steinmetz): {p_triangle_se/1000:.2f} kW/m³, Power loss: {p_triangle_se*2.32e-05:.2f} W')
+print(f'error: {(p_triangle-p_triangle_se) * 100/p_triangle_se:.2f} %\n')
 
 # print(f'traingular power_density should be = {g*p_sine_se/1000:.2f} kW/m³ , but Calc. traingular power_density is = {p_triangle/1000:.2f} kW/m³')
 print(f'Calc. g(a, D) from p_triangle(MagNet)/p_sine(Steinmetz): {p_triangle/p_sine_se:.3f}')

@@ -20,6 +20,7 @@ import materialdatabase as mdb
 # femmt libraries
 import femmt as fmt
 from datetime import datetime
+from typing import Dict, List, Tuple
 
 material_db = mdb.MaterialDatabase()
 
@@ -181,8 +182,9 @@ def plot_2d(x_value: list, y_value: list, x_label: str, y_label: str, title: str
     # plt.show()
 
 
-def plot_2d_u(x_value: list, y_value: list, x_label: str, y_label: str, title: str, plot_color: str, z_value: list = None,
-            z_label: str = None, inductance_value: list = None, annotations: list = None):
+def plot_2d_u(x_value: list, y_value: list, x_label: str, y_label: str, title: str, plot_color: str,
+              z_value: list = None,
+              z_label: str = None, inductance_value: list = None, annotations: list = None):
     """
     Visualize data in 2D plot with popover next to mouse position.
 
@@ -301,16 +303,17 @@ def plot_2d_u(x_value: list, y_value: list, x_label: str, y_label: str, title: s
     fig.canvas.mpl_connect("motion_notify_event", hover)
     ax.grid()
 
-    # Find and print top 5 best cases with lowest power loss, volume, and inductance deviation
-    if inductance_value is not None:
-        combined_data = list(zip(x_value, y_value, inductance_deviation, annotations))
-        combined_data.sort(key=lambda x: (x[1], x[0], abs(x[2])))
-        best_designs = combined_data[:10]
-        print("Best cases with lowest power loss, volume, and inductance deviation:")
-        for i, data in enumerate(best_designs):
-            print(f"Case {data[3]:.0f}: Volume = {data[0]:.6f} m³, Loss = {data[1]:.2f} W, Inductance Deviation = {data[2]:.1f} %")
+    # # Find and print top 5 best cases with lowest power loss, volume, and inductance deviation
+    # if inductance_value is not None:
+    #     combined_data = list(zip(x_value, y_value, inductance_deviation, annotations))
+    #     combined_data.sort(key=lambda x: (x[1], x[0], abs(x[2])))
+    #     best_designs = combined_data[:150]
+    #     print("Best cases with lowest power loss, volume, and inductance deviation:")
+    #     for i, data in enumerate(best_designs):
+    #         print(
+    #             f"Case {data[3]:.0f}: Volume = {data[0]:.6f} m³, Loss = {data[1]:.2f} W, Inductance Deviation = {data[2]:.1f} %")
 
-    # plt.show()
+    plt.show()
 
 
 def plot_3d(x_value: list, y_value: list, z_value: list, x_label: str, y_label: str, z_label: str,
@@ -528,6 +531,115 @@ def load_fem_simulation_results(working_directory: str):
         automated_design_settings = json.loads(fd.read())
 
     return real_inductance, total_loss, total_volume, total_cost, labels, automated_design_settings
+
+
+# def load_design_parameters(working_directory: str):
+#     """
+#     Load design parameters from JSON files in the given working directory.
+#
+#     param working_directory: Sets the working directory
+#     :type working_directory: str
+#     """
+#     working_directories = []
+#     labels = []
+#     core_inner_diameter = []
+#     core_h = []
+#     window_w = []
+#     window_h = []
+#
+#     design_files_directory = os.path.join(working_directory, 'fem_simulation_results')
+#     print("##########################")
+#     print(f"{design_files_directory=}")
+#     print("##########################")
+#     file_names = [f for f in os.listdir(design_files_directory) if
+#                   os.path.isfile(os.path.join(design_files_directory, f))]
+#
+#     counter = 0
+#     for name in file_names:
+#         temp_var = os.path.join(design_files_directory, name)
+#         working_directories.append(temp_var)
+#         labels.append(name.removesuffix('.json'))
+#         counter += 1
+#
+#     zip_iterator = zip(file_names, working_directories)
+#     logs = dict(zip_iterator)
+#
+#     for file_name, file_path in logs.items():
+#         with open(file_path, 'r') as f:
+#             data = json.load(f)
+#             core_parameters = data.get('simulation_settings', {}).get('core', {})
+#
+#             core_inner_diameter.append(core_parameters.get('core_inner_diameter'))
+#             core_h.append(core_parameters.get('core_h'))
+#             window_w.append(core_parameters.get('window_w'))
+#             window_h.append(core_parameters.get('window_h'))
+#
+#     return core_inner_diameter, core_h, window_w, window_h, labels
+
+
+def load_design_parameters(working_directory: str) -> Tuple[
+    List[float], List[float], List[float], List[float], List[str]]:
+    """
+    Load design parameters from JSON files in the given working directory.
+
+    param working_directory: Sets the working directory
+    :type working_directory: str
+    """
+    working_directories = []
+    labels = []
+    core_inner_diameter = []
+    core_h = []
+    window_w = []
+    window_h = []
+
+    design_files_directory = os.path.join(working_directory, 'fem_simulation_results')
+    # print("##########################")
+    # print(f"{design_files_directory=}")
+    # print("##########################")
+    file_names = [f for f in os.listdir(design_files_directory) if
+                  os.path.isfile(os.path.join(design_files_directory, f))]
+
+    counter = 0
+    for name in file_names:
+        temp_var = os.path.join(design_files_directory, name)
+        working_directories.append(temp_var)
+        labels.append(name.removesuffix('.json'))
+        counter += 1
+
+    zip_iterator = zip(file_names, working_directories)
+    logs = dict(zip_iterator)
+
+    for file_name, file_path in logs.items():
+        with open(file_path, 'r') as f:
+            data = json.load(f)
+            core_parameters = data.get('simulation_settings', {}).get('core', {})
+
+            core_inner_diameter.append(core_parameters.get('core_inner_diameter'))
+            core_h.append(core_parameters.get('core_h'))
+            window_w.append(core_parameters.get('window_w'))
+            window_h.append(core_parameters.get('window_h'))
+
+    return core_inner_diameter, core_h, window_w, window_h, labels
+
+
+def match_core_parameters(core_db: Dict, core_inner_diameter: List[float], window_w: List[float],
+                          labels: List[str]) -> np.ndarray:
+    matched_labels = []
+
+    for i in range(len(labels)):
+        for core_type, core_params in core_db.items():
+            if (core_inner_diameter[i] == core_params["core_inner_diameter"] and
+                    window_w[i] == core_params["window_w"]):
+                numeric_label = int(re.findall(r'\d+', labels[i])[0])
+                matched_labels.append((numeric_label, core_type))
+                break
+
+    matched_labels.sort()
+
+    dtype = [('label', int), ('core_type', 'U20')]
+    structured_array = np.array(matched_labels, dtype=dtype)
+
+    return structured_array
 
 
 class AutomatedDesign:
@@ -1096,7 +1208,7 @@ class AutomatedDesign:
         :return: Volume of the core.
         :rtype: float
         """
-        core_height = data_matrix[:, self.param["core_h"]] + data_matrix[:, self.param["core_inner_diameter"]] / 2
+        core_height = data_matrix[:, self.param["window_h"]] + data_matrix[:, self.param["core_inner_diameter"]] / 2
         winding_height = data_matrix[:, self.param["window_h"]]
         core_width = data_matrix[:, self.param["r_outer"]]
         winding_width = data_matrix[:, self.param["window_w"]]
@@ -1359,20 +1471,21 @@ class AutomatedDesign:
 
 
 if __name__ == '__main__':
-    task = 'simulate'
-    # task = 'load'
-
-    # Input parameters for the Automated Design
-    example_results_folder = os.path.join(os.path.dirname(__file__), "example_results")
-    if not os.path.exists(example_results_folder):
-        os.mkdir(example_results_folder)
-
-    # Working directory can be set arbitrarily
-    working_directory = os.path.join(example_results_folder, f'inductor_optimization_{datetime.now().strftime("%m-%d__%H-%M")}')
-    if not os.path.exists(working_directory):
-        os.mkdir(working_directory)
+    # task = 'simulate'
+    task = 'load'
 
     if task == 'simulate':
+
+        # Input parameters for the Automated Design
+        example_results_folder = os.path.join(os.path.dirname(__file__), "example_results")
+        if not os.path.exists(example_results_folder):
+            os.mkdir(example_results_folder)
+
+        # Working directory can be set arbitrarily
+        working_directory = os.path.join(example_results_folder,
+                                         f'inductor_optimization_{datetime.now().strftime("%m-%d__%H-%M")}')
+        if not os.path.exists(working_directory):
+            os.mkdir(working_directory)
 
         core_database = fmt.core_database()
         pq1611 = core_database["PQ 16/11.6"]
@@ -1417,9 +1530,9 @@ if __name__ == '__main__':
                                               pq2020['window_w'], pq2620['window_w'],
                                               pq2625['window_w'], pq3220['window_w'],
                                               pq3230['window_w'], pq3535['window_w']],
-                             no_of_turns=np.arange(10, 80).tolist(),
+                             no_of_turns=np.arange(10, 20).tolist(),
                              n_air_gaps=[1],
-                             air_gap_height=list(np.linspace(0.0001, 0.002, 40)),
+                             air_gap_height=list(np.linspace(0.0001, 0.002, 4)),
                              air_gap_position=[50],
                              core_material=[fmt.Material.N95],
                              mult_air_gap_type=['center_distributed'],
@@ -1458,7 +1571,7 @@ if __name__ == '__main__':
             ad.fem_simulation()
     elif task == 'load':
 
-        working_directory = f'C:/Users/vijay/Desktop/UPB/Thesis/0_VM_results/inductor_optimization'
+        working_directory = f'C:/Users/vijay/Desktop/UPB/Thesis/0_VM_results/inductor_optimization_07-29__15-37'
 
         # Load design and plot various plots for analysis
         inductance, total_loss, total_volume, total_cost, annotation_list, automated_design_settings = load_fem_simulation_results(
@@ -1469,10 +1582,83 @@ if __name__ == '__main__':
                                      annotation_list=annotation_list,
                                      goal_inductance=automated_design_settings["goal_inductance"], percent_tolerance=20)
 
+        core_db = fmt.core_database()
+        core_inner_diameter, core_h, window_w, window_h, labels = load_design_parameters(working_directory)
+        matched_labels = match_core_parameters(core_db, core_inner_diameter, window_w, labels)
+        # print(matched_labels)
+
+
+        def save_to_csv(array: np.ndarray, filename: str) -> None:
+            with open(filename, 'w', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(['Label', 'Core Type'])
+                for row in array:
+                    writer.writerow(row)
+
+
+        def compare_core_types(array: np.ndarray) -> List[str]:
+            core_types = array['core_type']
+            unique_core_types = np.unique(core_types)
+            return unique_core_types.tolist()
+
+
+        def compare_and_save_csv(matched_labels: np.ndarray, plot_data: np.ndarray, csv_filename: str) -> np.ndarray:
+            matched_indices = {label: core_type for label, core_type in matched_labels}
+
+            matched_data = []
+            plot_data_standard_cores = []
+
+            goal_inductance = 675e-6
+
+            for row in plot_data:
+                numeric_label = int(row[4])
+                if numeric_label in matched_indices:
+                    matched_data.append([
+                        numeric_label,
+                        row[0],  # Inductance
+                        (abs(row[0] - goal_inductance) / goal_inductance) * 100,  # Deviation
+                        row[1],  # Volume
+                        row[2],  # Losses
+                        matched_indices[numeric_label]
+                    ])
+                    plot_data_standard_cores.append([
+                        numeric_label,
+                        row[0],  # Inductance
+                        (abs(row[0] - goal_inductance) / goal_inductance) * 100,  # Deviation
+                        row[1],  # Volume
+                        row[2],  # Losses
+                        matched_indices[numeric_label]
+                    ])
+
+            matched_data.sort(key=lambda x: x[0])
+
+            with open(csv_filename, 'w', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(['Label', 'Inductance', 'Deviation', 'Volume', 'Losses', 'Core Type'])
+                writer.writerows(matched_data)
+
+            # dtype = [('label', int), ('inductance', float), ('deviation', float), ('volume', float), ('losses', float),
+            #          ('core_type', 'U20')]
+            plot_data_standard_cores_array = np.array(plot_data_standard_cores)#, dtype=dtype)
+
+            return plot_data_standard_cores_array
+
+        # # Save the structured array to a CSV file
+        # csv_filename = 'matched_labels_with_data.csv'
+        # save_to_csv(matched_labels, csv_filename)
+
+        # Compare core types and show only different values
+        different_core_types = compare_core_types(matched_labels)
+        print(different_core_types)
+
+        # Compare and save to CSV
+        csv_filename = f'standerd_core_inductor_optimization_07-29__15-37.csv'
+        plot_data_standard_cores = compare_and_save_csv(matched_labels, plot_data, csv_filename)
+
         plot_2d_u(
             x_value=plot_data[:, 1],
-            y_value=plot_data[:, 2],
-            x_label='Volume / m³',  # Unicode for superscript 3
+            y_value=plot_data[:, 2]*1.3,
+            x_label='Volume / m³',
             y_label='Loss / W',
             title='Volume vs Loss',
             plot_color='RdYlGn_r',
@@ -1482,7 +1668,7 @@ if __name__ == '__main__':
         # plot_2d(x_value=plot_data[:, 1], y_value=plot_data[:, 2], z_value=plot_data[:, 3],
         #         x_label='Volume / m\u00b3', y_label='Loss / W', z_label='Cost / \u20ac', title='Volume vs Loss',
         #         annotations=plot_data[:, 4], plot_color='RdYlGn_r', inductance_value=plot_data[:, 0])
-        #
+
         # plot_2d(x_value=plot_data[:, 1], y_value=plot_data[:, 3], z_value=plot_data[:, 2],
         #         x_label='Volume / m\u00b3', y_label='Cost / \u20ac', z_label='Loss / W', title='Volume vs Cost',
         #         annotations=plot_data[:, 4], plot_color='RdYlGn_r', inductance_value=plot_data[:, 0])
