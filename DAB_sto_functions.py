@@ -118,7 +118,7 @@ def stacked_transformer_fem_simulations_from_result_dtos(config_dto: DABStoSingl
 
     fundamental_frequency = 200000
 
-    waveforms = pd.read_csv(f'C:/Users/vijay/Desktop/Current waveform.csv', delimiter=',')
+    waveforms = pd.read_csv('Current waveform.csv', delimiter=',')
     time = waveforms['# t'].to_numpy() - waveforms['# t'][0]
     i_ls = waveforms['i_Ls'].to_numpy() - np.mean(waveforms['i_Ls'])
     i_hf2 = waveforms['i_HF2'].to_numpy() - np.mean(waveforms['i_HF2'])

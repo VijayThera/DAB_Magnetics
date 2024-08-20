@@ -355,7 +355,7 @@ class DABStackedTransformerOptimization:
                                 #=======================================================================================
                                 mdl = mh.loss.LossModel(material="3C95", team="paderborn")
 
-                                df = pd.read_csv(f'C:/Users/vijay/PycharmProjects/DAB_Magnetics/currents_shifted.csv')
+                                df = pd.read_csv('currents_shifted.csv')
                                 i_top = df['i_Ls']
                                 i_bot = df['i_Lc2_']
                                 total_points = len(i_top)
@@ -706,7 +706,7 @@ class DABStackedTransformerOptimization:
                                                                  t.values[0],
                                                                  t.values[1] if t.values[1] < 200 else None),
                                                              target_names=["volume", "losses"])
-                fig.show()
+                # fig.show()
 
                 # Current timestamp
                 timestamp = datetime.now().strftime("%m-%d__%H-%M")
@@ -779,7 +779,7 @@ class DABStackedTransformerOptimization:
                                             load_if_exists=True)
 
                 fig = optuna.visualization.plot_pareto_front(study, target_names=["volume", "losses", "deviation"])
-                fig.show()
+                # fig.show()
 
             ##############################
             # load

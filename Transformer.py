@@ -89,9 +89,9 @@ DAB_transformer_config = fmt.DABStoSingleInputConfig(
     permittivity_measurement_setup=mdb.MeasurementSetup.LEA_LK
 )
 
-# task = 'start_study'
+task = 'start_study'
 # task = 'filter_reluctance_model'
-task = 'fem_simulation_from_filtered_reluctance_model_results'
+# task = 'fem_simulation_from_filtered_reluctance_model_results'
 # task = 'plot_study_results'
 
 # study_name = f'workflow_{datetime.now().strftime("%m-%d__%H-%M")}'
@@ -103,7 +103,7 @@ if __name__ == '__main__':
 
     if task == 'start_study':
         dab.DABStackedTransformerOptimization.ReluctanceModel.NSGAII.start_study(study_name, DAB_transformer_config,
-                                                                                 20000,
+                                                                                 200,
                                                                                  storage='sqlite')
 
     elif task == 'filter_reluctance_model':
@@ -117,8 +117,8 @@ if __name__ == '__main__':
             reluctance_result_list, factor_min_dc_losses=0.5)
         print(f"{len(pareto_reluctance_dto_list)=}")
 
-        dab.DABStackedTransformerOptimization.plot(reluctance_result_list)
-        dab.DABStackedTransformerOptimization.plot(pareto_reluctance_dto_list)
+        # dab.DABStackedTransformerOptimization.plot(reluctance_result_list)
+        # dab.DABStackedTransformerOptimization.plot(pareto_reluctance_dto_list)
 
         # save results
         dab.DABStackedTransformerOptimization.ReluctanceModel.save_dto_list(pareto_reluctance_dto_list, os.path.join(
