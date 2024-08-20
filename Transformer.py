@@ -9,6 +9,7 @@ import optuna
 # femmt libraries
 import femmt as fmt
 import DAB_sto as dab
+import DAB_sto_dtos as dabdtos
 
 import materialdatabase as mdb
 
@@ -30,7 +31,7 @@ i_2 = [[0, 4.000e-07, 8.000e-07, 1.366e-06, 2.211e-06, 2.635e-06, 3.073e-06, 4.1
 # i_2 = [[0.0, 3.265248131976911e-07, 2.5e-06, 2.8265248131976912e-06, 5e-06],
 #        [-0.9196195846583147, -19.598444313231134, 0.9196195846583122, 19.59844431323113, -0.9196195846583147]]
 
-StoInsulation_config = fmt.DABStoInsulation(
+StoInsulation_config = dabdtos.DABStoInsulation(
     iso_top_core=1.5e-3,
     iso_bot_core=1.5e-3,
     iso_left_core_min=1.5e-3,
