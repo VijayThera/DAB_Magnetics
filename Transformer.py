@@ -77,7 +77,7 @@ DAB_transformer_config = dabdtos.DABStoSingleInputConfig(
 
     # misc
     working_directory=os.path.join(os.path.dirname(__file__), "example_results",
-                                   f'optuna_stacked_transformer_optimization1'),#_{datetime.now().strftime("%m-%d__%H-%M-%S")}'),
+                                   f'optuna_stacked_transformer_optimization'),#_{datetime.now().strftime("%m-%d__%H-%M-%S")}'),
     fft_filter_value_factor=0.05,
     mesh_accuracy=0.8,
 
@@ -98,7 +98,7 @@ task = 'start_study'
 # task = 'load_single_trail'
 
 max_loss = 1000
-trail_number = 4085
+trail_number = 1924
 
 # study_name = f'workflow_{datetime.now().strftime("%m-%d__%H-%M")}'
 study_name = "workflow_test"

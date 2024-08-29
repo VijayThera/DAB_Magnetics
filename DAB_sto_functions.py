@@ -91,12 +91,12 @@ def stacked_transformer_fem_simulation_from_result_dto(config_dto: DABStoSingleI
     geo.stacked_core_study(number_primary_coil_turns=dto.n_p_top, time_current_vectors=time_current_vectors,
                            plot_waveforms=False, fft_filter_value_factor=0.05)
 
-    # difference_l_h = 669e-6 - geo.L_h_conc
-    # difference_l_s = 125e-6 - geo.L_s_conc
-    # deviation = 100 * (abs(difference_l_h / 669e-6) +
-    #                    abs(difference_l_s / 125e-6))
-    # print(f'geo.L_h_conc:{geo.L_h_conc} H,\ngeo.L_s_conc:{geo.L_s_conc} H,\ndeviation: {deviation} %')
-    # print(f'p_hyst: {dto.p_hyst} W,\nn_target: {dto.n_p_bot/dto.n_s_bot}, n_conc: {geo.n_conc}')
+    difference_l_h = 669e-6 - geo.L_h_conc
+    difference_l_s = 125e-6 - geo.L_s_conc
+    deviation = 100 * (abs(difference_l_h / 669e-6) +
+                       abs(difference_l_s / 125e-6))
+    print(f'geo.L_h_conc:{geo.L_h_conc} H,\ngeo.L_s_conc:{geo.L_s_conc} H,\ndeviation: {deviation} %')
+    print(f'p_hyst: {dto.p_hyst} W,\nn_target: {dto.n_p_bot/dto.n_s_bot}, n_conc: {geo.n_conc}')
 
     return geo
 

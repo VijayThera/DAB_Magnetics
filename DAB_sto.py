@@ -378,10 +378,16 @@ class DABStackedTransformerOptimization:
                                     i_ls_sampled = np.array(i_ls[::step_size][:1024])
                                     i_hf2_sampled = np.array(i_hf2[::step_size][:1024])
 
-                                    flux_top = (n_p_top * i_ls_sampled) / t2_reluctance_matrix[0][0]
-                                    flux_bot = (n_p_bot * i_ls_sampled - n_s_bot * i_hf2_sampled) / \
-                                               t2_reluctance_matrix[1][
-                                                   1]
+                                    i_matrix = np.array([i_ls_sampled, i_hf2_sampled])
+                                    flux_matrix = fr.calculate_flux_matrix(reluctance_matrix=t2_reluctance_matrix,
+                                                                           winding_matrix=t2_winding_matrix,
+                                                                           current_matrix=i_matrix)
+                                    flux_top = flux_matrix[0]
+                                    flux_bot = flux_matrix[1]
+
+                                    # flux_top = (n_p_top * i_ls_sampled) / t2_reluctance_matrix[0][0]
+                                    # flux_bot = ((n_p_bot * i_ls_sampled - n_s_bot * i_hf2_sampled) /
+                                    #             t2_reluctance_matrix[1][1])
                                     flux_mid = flux_top + flux_bot
 
                                     B_top = flux_top / core_cross_section
