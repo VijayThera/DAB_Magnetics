@@ -48,8 +48,8 @@ def stacked_transformer_fem_simulation_from_result_dto(config_dto: DABStoSingleI
 
     # 3. set air gap parameters
     air_gaps = femmt.AirGaps(femmt.AirGapMethod.Stacked, core)
-    air_gaps.add_air_gap(femmt.AirGapLegPosition.CenterLeg, dto.air_gap_bot, stacked_position=femmt.StackedPosition.Top)
-    air_gaps.add_air_gap(femmt.AirGapLegPosition.CenterLeg, dto.air_gap_top, stacked_position=femmt.StackedPosition.Bot)
+    air_gaps.add_air_gap(femmt.AirGapLegPosition.CenterLeg, dto.air_gap_top, stacked_position=femmt.StackedPosition.Top)
+    air_gaps.add_air_gap(femmt.AirGapLegPosition.CenterLeg, dto.air_gap_bot, stacked_position=femmt.StackedPosition.Bot)
     geo.set_air_gaps(air_gaps)
 
     # 4. set insulations
@@ -90,21 +90,20 @@ def stacked_transformer_fem_simulation_from_result_dto(config_dto: DABStoSingleI
 
     geo.stacked_core_study(number_primary_coil_turns=dto.n_p_top, time_current_vectors=time_current_vectors,
                            plot_waveforms=False, fft_filter_value_factor=0.05)
-    # geo.single_simulation(freq=fundamental_frequency,
-    #                       current=[i_peak_1, i_peak_2],
-    #                       phi_deg=[phase_deg_1, phase_deg_2],
-    #                       show_fem_simulation_results=visualize)
 
-    geo.get_inductances(I0=5.5, op_frequency=fundamental_frequency,
-                        skin_mesh_factor=0.5, visualize_last_fem_simulation=False)
-
-    print(f'geo.L_h_conc:{geo.L_h_conc}, geo.L_s_conc:{geo.L_s_conc}')
+    # difference_l_h = 669e-6 - geo.L_h_conc
+    # difference_l_s = 125e-6 - geo.L_s_conc
+    # deviation = 100 * (abs(difference_l_h / 669e-6) +
+    #                    abs(difference_l_s / 125e-6))
+    # print(f'geo.L_h_conc:{geo.L_h_conc} H,\ngeo.L_s_conc:{geo.L_s_conc} H,\ndeviation: {deviation} %')
+    # print(f'p_hyst: {dto.p_hyst} W,\nn_target: {dto.n_p_bot/dto.n_s_bot}, n_conc: {geo.n_conc}')
 
     return geo
 
 
 def stacked_transformer_fem_simulations_from_result_dtos(config_dto: DABStoSingleInputConfig,
                                                          simulation_dto_list: List[DABStoSingleResultFile],
+                                                         max_loss: int,
                                                          visualize: bool = False,
                                                          ):
     """FEM simulation for the integrated transformer from a result DTO."""
@@ -118,7 +117,7 @@ def stacked_transformer_fem_simulations_from_result_dtos(config_dto: DABStoSingl
 
     fundamental_frequency = 200000
 
-    waveforms = pd.read_csv('Current waveform.csv', delimiter=',')
+    waveforms = pd.read_csv('currents_shifted.csv', delimiter=',')
     time = waveforms['# t'].to_numpy() - waveforms['# t'][0]
     i_ls = waveforms['i_Ls'].to_numpy() - np.mean(waveforms['i_Ls'])
     i_hf2 = waveforms['i_HF2'].to_numpy() - np.mean(waveforms['i_HF2'])
@@ -129,24 +128,27 @@ def stacked_transformer_fem_simulations_from_result_dtos(config_dto: DABStoSingl
     # i_peak_1, i_peak_2 = fr.max_value_from_value_vec(current_extracted_1_vec, current_extracted_2_vec)
 
     for count, dto in enumerate(simulation_dto_list):
-        print(f"FEM simulation {count} of {len(simulation_dto_list)}")
-        try:
-            stacked_transformer_fem_simulation_from_result_dto(
-                config_dto=config_dto,
-                dto=dto,
-                fem_working_directory=ito_target_and_fixed_parameters_dto.working_directories.fem_working_directory,
-                fundamental_frequency=fundamental_frequency,
-                time_current_vectors=time_current_vectors,
-                visualize=visualize)
+        if dto.total_loss < max_loss:
+            print(f"FEM simulation {count} of {len(simulation_dto_list)}, case_{dto.case}")
+            try:
+                stacked_transformer_fem_simulation_from_result_dto(
+                    config_dto=config_dto,
+                    dto=dto,
+                    fem_working_directory=ito_target_and_fixed_parameters_dto.working_directories.fem_working_directory,
+                    fundamental_frequency=fundamental_frequency,
+                    time_current_vectors=time_current_vectors,
+                    visualize=visualize)
 
-            source_json_file = os.path.join(
-                ito_target_and_fixed_parameters_dto.working_directories.fem_working_directory,
-                "results", "log_electro_magnetic.json")
-            destination_json_file = os.path.join(
-                ito_target_and_fixed_parameters_dto.working_directories.fem_simulation_results_directory,
-                f'case_{dto.case}.json')
+                source_json_file = os.path.join(
+                    ito_target_and_fixed_parameters_dto.working_directories.fem_working_directory,
+                    "results", "log_electro_magnetic.json")
+                destination_json_file = os.path.join(
+                    ito_target_and_fixed_parameters_dto.working_directories.fem_simulation_results_directory,
+                    f'case_{dto.case}.json')
 
-            shutil.copy(source_json_file, destination_json_file)
+                shutil.copy(source_json_file, destination_json_file)
 
-        except Exception as e:
-            print(f"Exception: {e}")
+            except Exception as e:
+                print(f"Exception: {e}")
+
+

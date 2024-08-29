@@ -10,7 +10,7 @@ mdl = mh.loss.LossModel(material="3C95", team="paderborn")
 freq = 200e3
 temp = 100
 
-df = pd.read_csv('Current waveform.csv')
+df = pd.read_csv('currents_shifted.csv')
 time = df['# t']
 i_Lc1 = df['i_Lc1']
 total_points = len(i_Lc1)

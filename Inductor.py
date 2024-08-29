@@ -21,6 +21,9 @@ import materialdatabase as mdb
 import femmt as fmt
 from datetime import datetime
 from typing import Dict, List, Tuple
+import pandas as pd
+import magnethub as mh
+import femmt.functions_reluctance as fr
 
 material_db = mdb.MaterialDatabase()
 
@@ -1125,7 +1128,7 @@ class AutomatedDesign:
         # I^2 * R loss. Calculation from PEAK current, so division by 2 is needed
         # dc_wire_loss = ((self.peak_current ** 2) / 2) * dc_resistance_wire       # Assuming sinusoidal current waveform
 
-        # I_rms^2 * R loss - 30% higher considering proximity effect
+        # I_rms^2 * R loss - 30% higher, considering proximity effect
         dc_wire_loss = 1.3 * (self.rms_current ** 2) * dc_resistance_wire
 
         # print(f'size of dc_wire_loss:{np.size(dc_wire_loss)},\nmin of dc_wire_loss:{np.min(dc_wire_loss)},'
@@ -1153,9 +1156,6 @@ class AutomatedDesign:
         return data_matrix
 
     def power_loss_cal(self, data_matrix):
-        import pandas as pd
-        import magnethub as mh
-        import femmt.functions_reluctance as fr
 
         mdl = mh.loss.LossModel(material="3C95", team="paderborn")
         df = pd.read_csv('currents_shifted.csv')
@@ -1657,7 +1657,7 @@ if __name__ == '__main__':
 
         plot_2d_u(
             x_value=plot_data[:, 1],
-            y_value=plot_data[:, 2]*1.3,
+            y_value=plot_data[:, 2],
             x_label='Volume / m³',
             y_label='Loss / W',
             title='Volume vs Loss',

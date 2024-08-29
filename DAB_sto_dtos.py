@@ -2,7 +2,7 @@
 # python libraries
 from dataclasses import dataclass
 from typing import List, Union
-
+import dataclasses
 # 3rd party libraries
 import numpy as np
 from materialdatabase.dtos import MaterialCurve
@@ -45,7 +45,7 @@ class DABStoSingleInputConfig:
     temperature: float
     frequency: int
     air_gap_min: float
-    air_gap_max:float
+    air_gap_max: float
 
     # sweep parameters: geometry and materials
     material_list: list
@@ -56,14 +56,10 @@ class DABStoSingleInputConfig:
 
     # conductor
     primary_litz_wire_list: list
-    # N_p_top_min_max_list: list
-    # N_p_bot_min_max_list: list
-    # primary_fill_factor: float
+    n_p_top_max: int
+    n_p_bot_max: int
 
     secondary_litz_wire_list: list
-    # N_s_top_min_max_list: list
-    # N_s_bot_min_max_list: list
-    # secondary_fill_factor: float
 
     # maximum limitation for transformer total height and core volume
     max_transformer_total_height: float
@@ -141,7 +137,8 @@ class DABCurrentWorkingPoint:
     time_current_1_vec: Union[np.ndarray, list]
     time_current_2_vec: Union[np.ndarray, list]
 
-@dataclass
+
+@dataclasses.dataclass(init=False)
 class DABStoSingleResultFile:
     """
     Dataclass to store the reluctance model simulation results.
@@ -155,7 +152,6 @@ class DABStoSingleResultFile:
     air_gap_bot: float
     n_p_top: int
     n_p_bot: int
-    # n_s_top: int
     n_s_bot: int
     window_h_top: float
     window_h_bot: float
@@ -166,14 +162,20 @@ class DABStoSingleResultFile:
     secondary_litz_wire: str
 
     # reluctance model results
-    # flux_top_max: float
-    # flux_bot_max: float
-    # flux_stray_max: float
-    # flux_density_top_max: float
-    # flux_density_bot_max: float
-    # flux_density_stray_max: float
+    flux_top_max: float
+    flux_bot_max: float
+    flux_mid_max: float
+    flux_density_top_max: float
+    flux_density_bot_max: float
+    flux_density_mid_max: float
     p_hyst: float
     primary_litz_wire_loss: float
     secondary_litz_wire_loss: float
     core_2daxi_total_volume: float
     total_loss: float
+
+    def __init__(self, **kwargs):
+        names = set([f.name for f in dataclasses.fields(self)])
+        for k, v in kwargs.items():
+            if k in names:
+                setattr(self, k, v)
