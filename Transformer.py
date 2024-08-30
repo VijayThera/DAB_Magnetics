@@ -77,7 +77,7 @@ DAB_transformer_config = dabdtos.DABStoSingleInputConfig(
 
     # misc
     working_directory=os.path.join(os.path.dirname(__file__), "example_results",
-                                   f'optuna_stacked_transformer_optimization'),#_{datetime.now().strftime("%m-%d__%H-%M-%S")}'),
+                                   f'optuna_stacked_transformer_optimization2'),#_{datetime.now().strftime("%m-%d__%H-%M-%S")}'),
     fft_filter_value_factor=0.05,
     mesh_accuracy=0.8,
 
@@ -110,7 +110,7 @@ if __name__ == '__main__':
     if task == 'start_study':
         dab.DABStackedTransformerOptimization.ReluctanceModel.NSGAII.start_study(study_name,
                                                                                  DAB_transformer_config,
-                                                                                 500,
+                                                                                 3000,
                                                                                  storage='sqlite')
 
     # ==========================================================================================

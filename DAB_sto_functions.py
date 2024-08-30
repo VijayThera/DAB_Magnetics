@@ -89,7 +89,7 @@ def stacked_transformer_fem_simulation_from_result_dto(config_dto: DABStoSingleI
     geo.create_model(freq=fundamental_frequency, pre_visualize_geometry=visualize)
 
     geo.stacked_core_study(number_primary_coil_turns=dto.n_p_top, time_current_vectors=time_current_vectors,
-                           plot_waveforms=False, fft_filter_value_factor=0.05)
+                           plot_waveforms=False, fft_filter_value_factor=0.05, show_fem_simulation_results=True)
 
     difference_l_h = 669e-6 - geo.L_h_conc
     difference_l_s = 125e-6 - geo.L_s_conc

@@ -162,7 +162,7 @@ class DABStackedTransformerOptimization:
             @staticmethod
             def objective(trial, config: DABStoSingleInputConfig,
                           target_and_fixed_parameters: DABStoTargetAndFixedParameters,
-                          show_geometries: bool = False):
+                          standard_core: bool = False):
                 """
                 Objective function to optimize.
 
@@ -173,6 +173,7 @@ class DABStackedTransformerOptimization:
                  * speed up the search for NSGA-II algorithm with dynamic alter the search space, see https://optuna.readthedocs.io/en/stable/faq.html#id10
 
 
+                :param standard_core:
                 :param trial: parameter suggesting by optuna
                 :param config: input configuration file
                 :type config: DABStoSingleInputConfig
@@ -185,32 +186,36 @@ class DABStackedTransformerOptimization:
                 #########################################################
                 # set core geometry optimization parameters
                 #########################################################
-                core_inner_diameter = trial.suggest_categorical('core_inner_diameter',
-                                                                config.core_inner_diameter_min_max_list)
 
-                # dictionary mapping core_inner_diameter to window_w
-                core_inner_diameter_to_window_w_map = {
-                    12e-3: (22.5 - 12) / 2 * 1e-3,
-                    13.45e-3: (27.5 - 13.45) / 2 * 1e-3,
-                    14.35e-3: (32 - 14.35) / 2 * 1e-3,
-                    14.9e-3: (37 - 14.9) / 2 * 1e-3
-                }
-                # Retrieve window_w if core_inner_diameter matches any key
-                window_w = core_inner_diameter_to_window_w_map.get(core_inner_diameter)
-                # window_w = trial.suggest_categorical('window_w', config.window_w_min_max_list)
+                # core_inner_diameter = trial.suggest_categorical('core_inner_diameter',
+                #                                                 config.core_inner_diameter_min_max_list)
+                #
+                # # dictionary mapping core_inner_diameter to window_w
+                # core_inner_diameter_to_window_w_map = {
+                #     12e-3: (22.5 - 12) / 2 * 1e-3,
+                #     13.45e-3: (27.5 - 13.45) / 2 * 1e-3,
+                #     14.35e-3: (32 - 14.35) / 2 * 1e-3,
+                #     14.9e-3: (37 - 14.9) / 2 * 1e-3
+                # }
+                # # Retrieve window_w if core_inner_diameter matches any key
+                # window_w = core_inner_diameter_to_window_w_map.get(core_inner_diameter)
+                # # window_w = trial.suggest_categorical('window_w', config.window_w_min_max_list)
+                #
+                # # dictionary mapping core_inner_diameter to window_h
+                # core_inner_diameter_to_window_h_map = {
+                #     12e-3: 16.1e-3,
+                #     13.45e-3: 11.5e-3,
+                #     14.35e-3: 25e-3,
+                #     14.9e-3: 20e-3
+                # }
+                # window_h = core_inner_diameter_to_window_h_map.get(core_inner_diameter)
+                #
+                # window_h_bot = trial.suggest_float('window_h_bot', config.window_h_bot_min_max_list[0] * window_h,
+                #                                    config.window_h_bot_min_max_list[1] * window_h)
 
-                # dictionary mapping core_inner_diameter to window_h
-                core_inner_diameter_to_window_h_map = {
-                    12e-3: 16.1e-3,
-                    13.45e-3: 11.5e-3,
-                    14.35e-3: 25e-3,
-                    14.9e-3: 20e-3
-                }
-                window_h = core_inner_diameter_to_window_h_map.get(core_inner_diameter)
-                # window_h_top = trial.suggest_float('window_h_top', config.window_h_top_min_max_list[0] * window_h,
-                #                                    config.window_h_top_min_max_list[1] * window_h)
-                window_h_bot = trial.suggest_float('window_h_bot', config.window_h_bot_min_max_list[0] * window_h,
-                                                   config.window_h_bot_min_max_list[1] * window_h)
+                core_inner_diameter = trial.suggest_float('core_inner_diameter', 0.015, 0.030)
+                window_w = trial.suggest_float('window_w', 0.008, 0.020)
+                window_h_bot = trial.suggest_float('window_h_bot', 0.010, 0.040)
 
                 material = trial.suggest_categorical('material', config.material_list)
                 primary_litz_wire = trial.suggest_categorical('primary_litz_wire', config.primary_litz_wire_list)
@@ -296,21 +301,6 @@ class DABStackedTransformerOptimization:
 
                         if np.linalg.det(t2_reluctance_matrix) != 0 and np.linalg.det(
                                 np.transpose(t2_winding_matrix)) != 0 and np.linalg.det(target_inductance_matrix) != 0:
-                            # calculate the flux
-                            flux_top_vec, flux_bot_vec, flux_stray_vec = fr.flux_vec_from_current_vec(
-                                target_and_fixed_parameters.current_extracted_top_vec,
-                                target_and_fixed_parameters.current_extracted_bot_vec,
-                                t2_winding_matrix,
-                                target_inductance_matrix)
-
-                            # calculate maximum values
-                            flux_top_max, flux_bot_max, flux_stray_max = fr.max_value_from_value_vec(flux_top_vec,
-                                                                                                     flux_bot_vec,
-                                                                                                     flux_stray_vec)
-
-                            flux_density_top_max = flux_top_max / core_cross_section
-                            flux_density_bot_max = flux_bot_max / core_cross_section
-                            flux_density_middle_max = flux_stray_max / core_cross_section
 
                             r_middle_target = -t2_reluctance_matrix[0][1]
                             r_top_target = t2_reluctance_matrix[0][0] - r_middle_target
@@ -374,7 +364,7 @@ class DABStackedTransformerOptimization:
                                     times = waveforms['# t'].to_numpy() - waveforms['# t'][0]
                                     i_ls = waveforms['i_Ls'].to_numpy() - np.mean(waveforms['i_Ls'])
                                     i_hf2 = waveforms['i_HF2'].to_numpy() - np.mean(waveforms['i_HF2'])
-                                    step_size = len(times) // 1024
+                                    step_size = round(len(times) / 1024)
                                     i_ls_sampled = np.array(i_ls[::step_size][:1024])
                                     i_hf2_sampled = np.array(i_hf2[::step_size][:1024])
 
@@ -546,6 +536,7 @@ class DABStackedTransformerOptimization:
                                                                  t.values[0],
                                                                  t.values[1]),
                                                              target_names=["volume", "losses"])
+                fig.show()
                 # Current timestamp
                 timestamp = datetime.now().strftime("%m-%d__%H-%M")
                 # Create a unique filename for the Pareto front plot
@@ -558,7 +549,7 @@ class DABStackedTransformerOptimization:
                 fig.write_html(file_path)
                 # Print the file path for reference
                 print('file_path:', file_path)
-                # fig.show()
+
 
             @staticmethod
             def proceed_study(study_name: str, config: DABStoSingleInputConfig, number_trials: int) -> None:
@@ -834,6 +825,19 @@ class OptunaFemmtParser:
             core_2daxi_total_volume=frozen_trial.values[0],
             total_loss=frozen_trial.values[1],
         )
+
+
+def study_to_df(study_name: str, database_url: str):
+    """Create a dataframe from a study.
+
+    :param study_name: name of study
+    :type study_name: str
+    :param database_url: url of database
+    :type database_url: str
+    """
+    loaded_study = optuna.create_study(study_name=study_name, storage=database_url, load_if_exists=True)
+    df = loaded_study.trials_dataframe()
+    df.to_csv(f'{study_name}.csv')
 
 
 def load_fem_simulation_results(working_directory: str):
