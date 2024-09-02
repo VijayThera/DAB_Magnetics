@@ -77,7 +77,7 @@ DAB_transformer_config = dabdtos.DABStoSingleInputConfig(
 
     # misc
     working_directory=os.path.join(os.path.dirname(__file__), "example_results",
-                                   f'optuna_stacked_transformer_optimization_flxcore_fac'),#_{datetime.now().strftime("%m-%d__%H-%M-%S")}'),
+                                   f'STO_stcore'),
     fft_filter_value_factor=0.05,
     mesh_accuracy=0.8,
 
@@ -97,9 +97,9 @@ task = 'start_study'
 # task = 'compare_results'
 # task = 'load_single_trail'
 
-max_loss = 25
+max_loss = 5000
 max_volume = 50e-6
-trail_number = 3830
+trail_number = 4008
 
 # study_name = f'workflow_{datetime.now().strftime("%m-%d__%H-%M")}'
 study_name = "workflow_test"
@@ -111,7 +111,7 @@ if __name__ == '__main__':
     if task == 'start_study':
         dab.DABStackedTransformerOptimization.ReluctanceModel.NSGAII.start_study(study_name,
                                                                                  DAB_transformer_config,
-                                                                                 5000,
+                                                                                 500,
                                                                                  storage='sqlite')
 
     # ==========================================================================================
@@ -128,8 +128,8 @@ if __name__ == '__main__':
             reluctance_result_list, factor_min_dc_losses=0.5)
         print(f"{len(pareto_reluctance_dto_list)=}")
 
-        dab.DABStackedTransformerOptimization.plot(reluctance_result_list)
-        dab.DABStackedTransformerOptimization.plot(pareto_reluctance_dto_list)
+        # dab.DABStackedTransformerOptimization.plot(reluctance_result_list)
+        # dab.DABStackedTransformerOptimization.plot(pareto_reluctance_dto_list)
 
         # save results
         dab.DABStackedTransformerOptimization.ReluctanceModel.save_dto_list(pareto_reluctance_dto_list, os.path.join(
@@ -164,6 +164,7 @@ if __name__ == '__main__':
     elif task == 'compare_results':
         winding_losses, Hys_losses, volume, labels = dab.load_fem_simulation_results(DAB_transformer_config.working_directory)
 
+        losses = []
         for i in range(len(labels)):
             trail_dto = dab.load_dab_dto_from_study(working_directory=DAB_transformer_config.working_directory,
                                                     study_name=study_name, trail_number=int(labels[i]))
@@ -174,9 +175,10 @@ if __name__ == '__main__':
                   f'\nRM - winding losses: {rm_windingloss:.2f} W, FEM - winding losses: {winding_losses[i]:.2f} W, ***'
                   f' factor = {winding_losses[i]/rm_windingloss :.2f}'
                   f'\n----------------------------------------------')
-        # dab.plot_2d(x_value=volume, y_value=losses,
-        #             x_label='Volume / m\u00b3', y_label='Loss / W',
-        #             title='Volume vs losses', plot_color='yellow', annotations=labels)
+            losses.append(trail_dto.p_hyst + winding_losses[i])
+        dab.plot_2d(x_value=volume, y_value=losses,
+                    x_label='Volume / m\u00b3', y_label='Loss / W',
+                    title='Volume vs losses', plot_color='yellow', annotations=labels)
 
     # ==========================================================================================
     # ==========================================================================================

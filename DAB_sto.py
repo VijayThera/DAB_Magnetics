@@ -187,35 +187,35 @@ class DABStackedTransformerOptimization:
                 # set core geometry optimization parameters
                 #########################################################
 
-                # core_inner_diameter = trial.suggest_categorical('core_inner_diameter',
-                #                                                 config.core_inner_diameter_min_max_list)
-                #
-                # # dictionary mapping core_inner_diameter to window_w
-                # core_inner_diameter_to_window_w_map = {
-                #     12e-3: (22.5 - 12) / 2 * 1e-3,
-                #     13.45e-3: (27.5 - 13.45) / 2 * 1e-3,
-                #     14.35e-3: (32 - 14.35) / 2 * 1e-3,
-                #     14.9e-3: (37 - 14.9) / 2 * 1e-3
-                # }
-                # # Retrieve window_w if core_inner_diameter matches any key
-                # window_w = core_inner_diameter_to_window_w_map.get(core_inner_diameter)
-                # # window_w = trial.suggest_categorical('window_w', config.window_w_min_max_list)
-                #
-                # # dictionary mapping core_inner_diameter to window_h
-                # core_inner_diameter_to_window_h_map = {
-                #     12e-3: 16.1e-3,
-                #     13.45e-3: 11.5e-3,
-                #     14.35e-3: 25e-3,
-                #     14.9e-3: 20e-3
-                # }
-                # window_h = core_inner_diameter_to_window_h_map.get(core_inner_diameter)
-                #
-                # window_h_bot = trial.suggest_float('window_h_bot', config.window_h_bot_min_max_list[0] * window_h,
-                #                                    config.window_h_bot_min_max_list[1] * window_h)
+                core_inner_diameter = trial.suggest_categorical('core_inner_diameter',
+                                                                config.core_inner_diameter_min_max_list)
 
-                core_inner_diameter = trial.suggest_float('core_inner_diameter', 0.015, 0.030)
-                window_w = trial.suggest_float('window_w', 0.008, 0.020)
-                window_h_bot = trial.suggest_float('window_h_bot', 0.010, 0.040)
+                # dictionary mapping core_inner_diameter to window_w
+                core_inner_diameter_to_window_w_map = {
+                    12e-3: (22.5 - 12) / 2 * 1e-3,
+                    13.45e-3: (27.5 - 13.45) / 2 * 1e-3,
+                    14.35e-3: (32 - 14.35) / 2 * 1e-3,
+                    14.9e-3: (37 - 14.9) / 2 * 1e-3
+                }
+                # Retrieve window_w if core_inner_diameter matches any key
+                window_w = core_inner_diameter_to_window_w_map.get(core_inner_diameter)
+                # window_w = trial.suggest_categorical('window_w', config.window_w_min_max_list)
+
+                # dictionary mapping core_inner_diameter to window_h
+                core_inner_diameter_to_window_h_map = {
+                    12e-3: 16.1e-3,
+                    13.45e-3: 11.5e-3,
+                    14.35e-3: 25e-3,
+                    14.9e-3: 20e-3
+                }
+                window_h = core_inner_diameter_to_window_h_map.get(core_inner_diameter)
+
+                window_h_bot = trial.suggest_float('window_h_bot', config.window_h_bot_min_max_list[0] * window_h,
+                                                   config.window_h_bot_min_max_list[1] * window_h)
+
+                # core_inner_diameter = trial.suggest_float('core_inner_diameter', 0.015, 0.030)
+                # window_w = trial.suggest_float('window_w', 0.008, 0.020)
+                # window_h_bot = trial.suggest_float('window_h_bot', 0.010, 0.040)
 
                 material = trial.suggest_categorical('material', config.material_list)
                 primary_litz_wire = trial.suggest_categorical('primary_litz_wire', config.primary_litz_wire_list)
@@ -317,8 +317,8 @@ class DABStackedTransformerOptimization:
                                                                       core_top_bot_height)
 
                             r_middle_target = -t2_reluctance_matrix[0][1]
-                            r_top_target = t2_reluctance_matrix[0][0] - r_middle_target # - r_top_topcore
-                            r_bot_target = t2_reluctance_matrix[1][1] - r_middle_target # - r_top_botcore
+                            r_top_target = t2_reluctance_matrix[0][0] - r_middle_target  # - r_top_topcore
+                            r_bot_target = t2_reluctance_matrix[1][1] - r_middle_target  # - r_top_botcore
 
                             r_air_gap_top_target = r_top_target - 2 * r_center_topcore - r_top_topcore
                             r_air_gap_bot_target = r_bot_target - 2 * r_center_botcore - r_top_botcore
@@ -432,7 +432,7 @@ class DABStackedTransformerOptimization:
                                                                                   primary_effective_conductive_radius,
                                                                                   material='Copper')
                                     # print(primary_resistance)
-                                    primary_dc_loss = 2.4 * primary_resistance * target_and_fixed_parameters.i_rms_1 ** 2
+                                    primary_dc_loss = primary_resistance * target_and_fixed_parameters.i_rms_1 ** 2
 
                                     secondary_effective_conductive_cross_section = secondary_litz['strands_numbers'] * \
                                                                                    secondary_litz[
@@ -444,7 +444,7 @@ class DABStackedTransformerOptimization:
                                                                                     secondary_effective_conductive_radius,
                                                                                     material='Copper')
                                     # print(secondary_resistance)
-                                    secondary_dc_loss = 2.4 * secondary_resistance * target_and_fixed_parameters.i_rms_2 ** 2
+                                    secondary_dc_loss = secondary_resistance * target_and_fixed_parameters.i_rms_2 ** 2
 
                                     total_loss = p_hyst + primary_dc_loss + secondary_dc_loss
                                     trial.set_user_attr('window_w', window_w)
@@ -556,7 +556,6 @@ class DABStackedTransformerOptimization:
                 # fig.write_html(file_path)
                 # # Print the file path for reference
                 # print('file_path:', file_path)
-
 
             @staticmethod
             def proceed_study(study_name: str, config: DABStoSingleInputConfig, number_trials: int) -> None:
@@ -1013,76 +1012,78 @@ def plot_2d(x_value: list, y_value: list, x_label: str, y_label: str, title: str
         cbar.ax.get_yaxis().labelpad = 15
         cbar.ax.set_ylabel(z_label, rotation=270)
 
-    # Adding annotations directly on the points
-    for i, txt in enumerate(names):
-        ax.annotate(txt, (x_value[i], y_value[i]), textcoords="offset points", xytext=(0, 5), ha='center',
-                    fontsize=7, rotation=90)
-
-    ax.grid()
-    plt.show()
-
-    # annot = ax.annotate("", xy=(0, 0), xytext=(20, 20), textcoords="offset points",
-    #                     bbox=dict(boxstyle="round", fc="w"),
-    #                     arrowprops=dict(arrowstyle="->"))
-    # annot.set_visible(False)
+    # # ===============================
+    # # Adding annotations directly on the points
+    # for i, txt in enumerate(names):
+    #     ax.annotate(txt, (x_value[i], y_value[i]), textcoords="offset points", xytext=(0, 5), ha='center',
+    #                 fontsize=7, rotation=90)
     #
-    # def update_annot(ind):
-    #     """
-    #     Create popover annotations in 2d plot.
-    #
-    #     :param ind:
-    #     :type ind:
-    #     """
-    #     pos = sc.get_offsets()[ind["ind"][0]]
-    #     annot.xy = pos
-    #     text = ""
-    #     if z_label is None and inductance_value is None:
-    #         text = "case: {}\n{}: {}\n{}:{}".\
-    #             format(" ".join([names[n] for n in ind["ind"]]),
-    #                    x_label, " ".join([x_value_str[n] for n in ind["ind"]]),
-    #                    y_label, " ".join([y_value_str[n] for n in ind["ind"]]))
-    #     elif z_label is not None and inductance_value is None:
-    #         text = "case: {}\n{}: {}\n{}:{}\n{}:{}". \
-    #             format(" ".join([names[n] for n in ind["ind"]]),
-    #                    x_label, " ".join([x_value_str[n] for n in ind["ind"]]),
-    #                    y_label, " ".join([y_value_str[n] for n in ind["ind"]]),
-    #                    z_label, " ".join([z_value_str[n] for n in ind["ind"]]))
-    #     elif z_label is None and inductance_value is not None:
-    #         text = "case: {}\n{}: {}\n{}:{}\n{}:{}". \
-    #             format(" ".join([names[n] for n in ind["ind"]]),
-    #                    x_label, " ".join([x_value_str[n] for n in ind["ind"]]),
-    #                    y_label, " ".join([y_value_str[n] for n in ind["ind"]]),
-    #                    l_label, " ".join([l_value_str[n] for n in ind["ind"]]))
-    #     else:
-    #         text = "case: {}\n{}: {}\n{}:{}\n{}:{}\n{}:{}".\
-    #             format(" ".join([names[n] for n in ind["ind"]]),
-    #                    x_label, " ".join([x_value_str[n] for n in ind["ind"]]),
-    #                    y_label, " ".join([y_value_str[n] for n in ind["ind"]]),
-    #                    z_label, " ".join([z_value_str[n] for n in ind["ind"]]),
-    #                    l_label, " ".join([l_value_str[n] for n in ind["ind"]]))
-    #     annot.set_text(text)
-    #     # annot.get_bbox_patch().set_facecolor(cmap(norm(c[ind["ind"][0]])))
-    #     annot.get_bbox_patch().set_alpha(0.8)
-    #
-    # def hover(event):
-    #     """
-    #     Event that is triggered when mouse is hovered. Shows text annotation over data point closest to mouse.
-    #
-    #     :param event:
-    #     :type event:
-    #     """
-    #     vis = annot.get_visible()
-    #     if event.inaxes == ax:
-    #         cont, ind = sc.contains(event)
-    #         if cont:
-    #             update_annot(ind)
-    #             annot.set_visible(True)
-    #             fig.canvas.draw_idle()
-    #         else:
-    #             if vis:
-    #                 annot.set_visible(False)
-    #                 fig.canvas.draw_idle()
-    #
-    # fig.canvas.mpl_connect("motion_notify_event", hover)
     # ax.grid()
     # plt.show()
+    # # ===============================
+
+    annot = ax.annotate("", xy=(0, 0), xytext=(20, 20), textcoords="offset points",
+                        bbox=dict(boxstyle="round", fc="w"),
+                        arrowprops=dict(arrowstyle="->"))
+    annot.set_visible(False)
+
+    def update_annot(ind):
+        """
+        Create popover annotations in 2d plot.
+
+        :param ind:
+        :type ind:
+        """
+        pos = sc.get_offsets()[ind["ind"][0]]
+        annot.xy = pos
+        text = ""
+        if z_label is None and inductance_value is None:
+            text = "case: {}\n{}: {}\n{}:{}". \
+                format(" ".join([names[n] for n in ind["ind"]]),
+                       x_label, " ".join([x_value_str[n] for n in ind["ind"]]),
+                       y_label, " ".join([y_value_str[n] for n in ind["ind"]]))
+        elif z_label is not None and inductance_value is None:
+            text = "case: {}\n{}: {}\n{}:{}\n{}:{}". \
+                format(" ".join([names[n] for n in ind["ind"]]),
+                       x_label, " ".join([x_value_str[n] for n in ind["ind"]]),
+                       y_label, " ".join([y_value_str[n] for n in ind["ind"]]),
+                       z_label, " ".join([z_value_str[n] for n in ind["ind"]]))
+        elif z_label is None and inductance_value is not None:
+            text = "case: {}\n{}: {}\n{}:{}\n{}:{}". \
+                format(" ".join([names[n] for n in ind["ind"]]),
+                       x_label, " ".join([x_value_str[n] for n in ind["ind"]]),
+                       y_label, " ".join([y_value_str[n] for n in ind["ind"]]),
+                       l_label, " ".join([l_value_str[n] for n in ind["ind"]]))
+        else:
+            text = "case: {}\n{}: {}\n{}:{}\n{}:{}\n{}:{}". \
+                format(" ".join([names[n] for n in ind["ind"]]),
+                       x_label, " ".join([x_value_str[n] for n in ind["ind"]]),
+                       y_label, " ".join([y_value_str[n] for n in ind["ind"]]),
+                       z_label, " ".join([z_value_str[n] for n in ind["ind"]]),
+                       l_label, " ".join([l_value_str[n] for n in ind["ind"]]))
+        annot.set_text(text)
+        # annot.get_bbox_patch().set_facecolor(cmap(norm(c[ind["ind"][0]])))
+        annot.get_bbox_patch().set_alpha(0.8)
+
+    def hover(event):
+        """
+        Event that is triggered when mouse is hovered. Shows text annotation over data point closest to mouse.
+
+        :param event:
+        :type event:
+        """
+        vis = annot.get_visible()
+        if event.inaxes == ax:
+            cont, ind = sc.contains(event)
+            if cont:
+                update_annot(ind)
+                annot.set_visible(True)
+                fig.canvas.draw_idle()
+            else:
+                if vis:
+                    annot.set_visible(False)
+                    fig.canvas.draw_idle()
+
+    fig.canvas.mpl_connect("motion_notify_event", hover)
+    ax.grid()
+    plt.show()
