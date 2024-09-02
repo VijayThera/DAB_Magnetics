@@ -57,7 +57,7 @@ DAB_transformer_config = dabdtos.DABStoSingleInputConfig(
     air_gap_max=2e-3,
 
     # sweep parameters: geometry and materials
-    material_list=[mdb.Material.N95],
+    material_list=[mdb.Material._3C95],
     core_inner_diameter_min_max_list=[pq2625["core_inner_diameter"], pq3220["core_inner_diameter"],
                                       pq3535["core_inner_diameter"], pq4030["core_inner_diameter"]],
     window_w_min_max_list=[pq2625["window_w"], pq3220["window_w"], pq3535["window_w"], pq4030["window_w"]],
@@ -77,7 +77,7 @@ DAB_transformer_config = dabdtos.DABStoSingleInputConfig(
 
     # misc
     working_directory=os.path.join(os.path.dirname(__file__), "example_results",
-                                   f'optuna_stacked_transformer_optimization2'),#_{datetime.now().strftime("%m-%d__%H-%M-%S")}'),
+                                   f'optuna_stacked_transformer_optimization_flxcore_fac'),#_{datetime.now().strftime("%m-%d__%H-%M-%S")}'),
     fft_filter_value_factor=0.05,
     mesh_accuracy=0.8,
 
@@ -97,8 +97,9 @@ task = 'start_study'
 # task = 'compare_results'
 # task = 'load_single_trail'
 
-max_loss = 1000
-trail_number = 1924
+max_loss = 25
+max_volume = 50e-6
+trail_number = 3830
 
 # study_name = f'workflow_{datetime.now().strftime("%m-%d__%H-%M")}'
 study_name = "workflow_test"
@@ -110,7 +111,7 @@ if __name__ == '__main__':
     if task == 'start_study':
         dab.DABStackedTransformerOptimization.ReluctanceModel.NSGAII.start_study(study_name,
                                                                                  DAB_transformer_config,
-                                                                                 3000,
+                                                                                 5000,
                                                                                  storage='sqlite')
 
     # ==========================================================================================
@@ -161,18 +162,21 @@ if __name__ == '__main__':
     # ==========================================================================================
 
     elif task == 'compare_results':
-        losses, volume, labels = dab.load_fem_simulation_results(DAB_transformer_config.working_directory)
+        winding_losses, Hys_losses, volume, labels = dab.load_fem_simulation_results(DAB_transformer_config.working_directory)
 
         for i in range(len(labels)):
             trail_dto = dab.load_dab_dto_from_study(working_directory=DAB_transformer_config.working_directory,
                                                     study_name=study_name, trail_number=int(labels[i]))
             # reluctance model results
+            rm_windingloss = (trail_dto.primary_litz_wire_loss+trail_dto.secondary_litz_wire_loss)
             print(f'trail number: {labels[i]}'
-                  f'\nRM - total losses: {trail_dto.total_loss:.2f} W, FEM - total losses: {losses[i]:.2f} W'
+                  f'\nRM - Hyst losses: {trail_dto.p_hyst:.2f} W, FEM - Hyst losses: {Hys_losses[i]:.2f} W'
+                  f'\nRM - winding losses: {rm_windingloss:.2f} W, FEM - winding losses: {winding_losses[i]:.2f} W, ***'
+                  f' factor = {winding_losses[i]/rm_windingloss :.2f}'
                   f'\n----------------------------------------------')
-        dab.plot_2d(x_value=volume, y_value=losses,
-                    x_label='Volume / m\u00b3', y_label='Loss / W',
-                    title='Volume vs losses', plot_color='yellow', annotations=labels)
+        # dab.plot_2d(x_value=volume, y_value=losses,
+        #             x_label='Volume / m\u00b3', y_label='Loss / W',
+        #             title='Volume vs losses', plot_color='yellow', annotations=labels)
 
     # ==========================================================================================
     # ==========================================================================================
@@ -191,7 +195,7 @@ if __name__ == '__main__':
                                                                     fem_working_directory=DAB_transformer_config.working_directory,
                                                                     fundamental_frequency=200e3,
                                                                     time_current_vectors=time_current_vectors,
-                                                                    visualize=True)
+                                                                    visualize=True, show_last_fem_simulation=True)
 
     time_stop = datetime.now()
 

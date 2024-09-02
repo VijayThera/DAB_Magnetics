@@ -455,15 +455,6 @@ import numpy as np
 from matplotlib import pyplot as plt
 import femmt.functions_reluctance as fr
 
-t2_winding_matrix = [[20, 0], [29, 7]]
-
-target_inductance_matrix = fr.calculate_inductance_matrix_from_ls_lh_n(125e-6,
-                                                                       667e-6,
-                                                                       4.2)
-t2_reluctance_matrix = fr.calculate_reluctance_matrix(t2_winding_matrix,
-                                                      target_inductance_matrix)
-print(t2_reluctance_matrix)
-
 waveforms = pd.read_csv('currents_shifted.csv')
 times = waveforms['# t'].to_numpy() - waveforms['# t'][0]
 i_ls = waveforms['i_Ls'].to_numpy() - np.mean(waveforms['i_Ls'])
@@ -481,8 +472,28 @@ plt.grid()
 plt.legend()
 plt.show()
 
-i_matrix = np.array([i_ls_sampled, i_hf2_sampled])
-flux_matrix = fr.calculate_flux_matrix(reluctance_matrix=t2_reluctance_matrix,
+i_matrix = np.array([i_ls_sampled, -i_hf2_sampled])
+
+t2_winding_matrix = [[20, 0], [29, 7]]
+
+target_inductance_matrix = fr.calculate_inductance_matrix_from_ls_lh_n(125e-6,
+                                                                       667e-6,
+                                                                       4.2)
+t2_reluctance_matrix = fr.calculate_reluctance_matrix(t2_winding_matrix,
+                                                      target_inductance_matrix)
+print(abs(t2_reluctance_matrix))
+
+print(f'r_inv:\n{np.linalg.inv(abs(t2_reluctance_matrix))}')
+print(f'r_inv*n:\n{np.matmul(np.linalg.inv(abs(t2_reluctance_matrix)), t2_winding_matrix)}')
+print(f'r_inv*n*i:\n{np.matmul(np.matmul(np.linalg.inv(abs(t2_reluctance_matrix)), t2_winding_matrix), i_matrix)}')
+
+r_top_botcore = fr.r_core_top_bot_radiant(14.35e-3, (32 - 14.35) / 2 * 1e-3,
+                                          3000,
+                                          14.35e-3 / 4)
+print(r_top_botcore)
+core_cross_section = (14.35e-3 / 2) ** 2 * np.pi
+
+flux_matrix = fr.calculate_flux_matrix(reluctance_matrix=abs(t2_reluctance_matrix),
                                        winding_matrix=t2_winding_matrix,
                                        current_matrix=i_matrix)
 
@@ -494,9 +505,17 @@ flux_bot = flux_matrix[1]
 flux_mid = flux_top + flux_bot
 # print(flux_mid)
 
-plt.plot(times_sampled, flux_top, label='flux_top')
-plt.plot(times_sampled, flux_bot, label='flux_bot')
-plt.plot(times_sampled, flux_mid, label='flux_mid')
+flux_top_1 = (20 * i_ls_sampled) / t2_reluctance_matrix[0][0]
+flux_bot_1 = ((29 * i_ls_sampled - 7 * i_hf2_sampled) /
+              t2_reluctance_matrix[1][1])
+flux_mid_1 = flux_bot_1 + flux_top_1
+
+plt.plot(times_sampled, flux_top/core_cross_section, label='flux_top')
+plt.plot(times_sampled, flux_bot/core_cross_section, label='flux_bot')
+plt.plot(times_sampled, flux_mid/core_cross_section, label='flux_mid')
+plt.plot(times_sampled, flux_top_1/core_cross_section, label='flux_top_1')
+plt.plot(times_sampled, flux_bot_1/core_cross_section, label='flux_bot_1')
+plt.plot(times_sampled, flux_mid_1/core_cross_section, label='flux_mid_1')
 plt.grid()
 plt.legend()
 plt.show()

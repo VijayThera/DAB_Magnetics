@@ -302,10 +302,6 @@ class DABStackedTransformerOptimization:
                         if np.linalg.det(t2_reluctance_matrix) != 0 and np.linalg.det(
                                 np.transpose(t2_winding_matrix)) != 0 and np.linalg.det(target_inductance_matrix) != 0:
 
-                            r_middle_target = -t2_reluctance_matrix[0][1]
-                            r_top_target = t2_reluctance_matrix[0][0] - r_middle_target
-                            r_bot_target = t2_reluctance_matrix[1][1] - r_middle_target
-
                             r_center_topcore = fr.r_core_round(core_inner_diameter, window_h_top,
                                                                material_data.material_mu_r_abs)
 
@@ -319,6 +315,10 @@ class DABStackedTransformerOptimization:
                             r_top_botcore = fr.r_core_top_bot_radiant(core_inner_diameter, window_w,
                                                                       material_data.material_mu_r_abs,
                                                                       core_top_bot_height)
+
+                            r_middle_target = -t2_reluctance_matrix[0][1]
+                            r_top_target = t2_reluctance_matrix[0][0] - r_middle_target # - r_top_topcore
+                            r_bot_target = t2_reluctance_matrix[1][1] - r_middle_target # - r_top_botcore
 
                             r_air_gap_top_target = r_top_target - 2 * r_center_topcore - r_top_topcore
                             r_air_gap_bot_target = r_bot_target - 2 * r_center_botcore - r_top_botcore
@@ -364,12 +364,13 @@ class DABStackedTransformerOptimization:
                                     times = waveforms['# t'].to_numpy() - waveforms['# t'][0]
                                     i_ls = waveforms['i_Ls'].to_numpy() - np.mean(waveforms['i_Ls'])
                                     i_hf2 = waveforms['i_HF2'].to_numpy() - np.mean(waveforms['i_HF2'])
-                                    step_size = round(len(times) / 1024)
-                                    i_ls_sampled = np.array(i_ls[::step_size][:1024])
-                                    i_hf2_sampled = np.array(i_hf2[::step_size][:1024])
+                                    # step_size = round(len(times) / 1024)
+                                    # i_ls_sampled = np.array(i_ls[::step_size][:1024])
+                                    # i_hf2_sampled = np.array(i_hf2[::step_size][:1024])
 
-                                    i_matrix = np.array([i_ls_sampled, i_hf2_sampled])
-                                    flux_matrix = fr.calculate_flux_matrix(reluctance_matrix=t2_reluctance_matrix,
+                                    # i_matrix = np.array([i_ls_sampled, i_hf2_sampled])
+                                    i_matrix = np.array([i_ls, -i_hf2])
+                                    flux_matrix = fr.calculate_flux_matrix(reluctance_matrix=abs(t2_reluctance_matrix),
                                                                            winding_matrix=t2_winding_matrix,
                                                                            current_matrix=i_matrix)
                                     flux_top = flux_matrix[0]
@@ -384,9 +385,15 @@ class DABStackedTransformerOptimization:
                                     B_bot = flux_bot / core_cross_section
                                     B_mid = flux_mid / core_cross_section
 
-                                    p_hyst_den_top, _ = mdl(B_top, config.frequency, config.temperature)
-                                    p_hyst_den_bot, _ = mdl(B_bot, config.frequency, config.temperature)
-                                    p_hyst_den_mid, _ = mdl(B_mid, config.frequency, config.temperature)
+                                    step_size = round(len(B_top) / 1024)
+
+                                    B_top_sampled = np.array(B_top[::step_size][:1024])
+                                    B_bot_sampled = np.array(B_bot[::step_size][:1024])
+                                    B_mid_sampled = np.array(B_mid[::step_size][:1024])
+
+                                    p_hyst_den_top, _ = mdl(B_top_sampled, config.frequency, config.temperature)
+                                    p_hyst_den_bot, _ = mdl(B_bot_sampled, config.frequency, config.temperature)
+                                    p_hyst_den_mid, _ = mdl(B_mid_sampled, config.frequency, config.temperature)
 
                                     core_width = fr.calculate_r_outer(core_inner_diameter, window_w)
                                     inner_leg_width = core_inner_diameter / 2
@@ -425,7 +432,7 @@ class DABStackedTransformerOptimization:
                                                                                   primary_effective_conductive_radius,
                                                                                   material='Copper')
                                     # print(primary_resistance)
-                                    primary_dc_loss = primary_resistance * target_and_fixed_parameters.i_rms_1 ** 2
+                                    primary_dc_loss = 2.4 * primary_resistance * target_and_fixed_parameters.i_rms_1 ** 2
 
                                     secondary_effective_conductive_cross_section = secondary_litz['strands_numbers'] * \
                                                                                    secondary_litz[
@@ -437,7 +444,7 @@ class DABStackedTransformerOptimization:
                                                                                     secondary_effective_conductive_radius,
                                                                                     material='Copper')
                                     # print(secondary_resistance)
-                                    secondary_dc_loss = secondary_resistance * target_and_fixed_parameters.i_rms_2 ** 2
+                                    secondary_dc_loss = 2.4 * secondary_resistance * target_and_fixed_parameters.i_rms_2 ** 2
 
                                     total_loss = p_hyst + primary_dc_loss + secondary_dc_loss
                                     trial.set_user_attr('window_w', window_w)
@@ -513,7 +520,7 @@ class DABStackedTransformerOptimization:
                                                                                                         target_and_fixed_parameters,
                                                                                                         False)
                 directions = ['minimize', 'minimize']
-                sampler = optuna.samplers.NSGAIISampler()
+                sampler = optuna.samplers.NSGAIIISampler()
                 study_in_storage = optuna.create_study(directions=directions, study_name=study_name, storage=storage,
                                                        load_if_exists=True, sampler=sampler)
 
@@ -525,30 +532,30 @@ class DABStackedTransformerOptimization:
                 #n_jobs=-1, gc_after_trial=False,
                 study_in_storage.add_trials(study_in_memory.trials[-number_trials:])
 
-                # fig = optuna.visualization.plot_pareto_front(study, targets=lambda t: (
-                #     t.values[0] if error_difference_inductance_sum_percent > t.values[2] else None,
-                #     t.values[1] if error_difference_inductance_sum_percent > t.values[2] else None),
-                #                                              target_names=["volume in m³", "loss in W"])
-                # if t.values[1] < 2000 else None
-                # in-memory calculation is shown before saving the data to database
-                fig = optuna.visualization.plot_pareto_front(study_in_memory,
-                                                             targets=lambda t: (
-                                                                 t.values[0],
-                                                                 t.values[1]),
-                                                             target_names=["volume", "losses"])
-                fig.show()
-                # Current timestamp
-                timestamp = datetime.now().strftime("%m-%d__%H-%M")
-                # Create a unique filename for the Pareto front plot
-                filename = f"Pareto_Front__Trials-{len(study_in_memory.trials)}__{timestamp}.html"
-                # Specify the directory to save the file
-                save_dir = '../DAB_Magnetics/example_results/pareto'
-                os.makedirs(save_dir, exist_ok=True)
-                # Combine directory and filename
-                file_path = os.path.join(save_dir, filename)
-                fig.write_html(file_path)
-                # Print the file path for reference
-                print('file_path:', file_path)
+                # # fig = optuna.visualization.plot_pareto_front(study, targets=lambda t: (
+                # #     t.values[0] if error_difference_inductance_sum_percent > t.values[2] else None,
+                # #     t.values[1] if error_difference_inductance_sum_percent > t.values[2] else None),
+                # #                                              target_names=["volume in m³", "loss in W"])
+                # # if t.values[1] < 2000 else None
+                # # in-memory calculation is shown before saving the data to database
+                # fig = optuna.visualization.plot_pareto_front(study_in_memory,
+                #                                              targets=lambda t: (
+                #                                                  t.values[0],
+                #                                                  t.values[1]),
+                #                                              target_names=["volume", "losses"])
+                # fig.show()
+                # # Current timestamp
+                # timestamp = datetime.now().strftime("%m-%d__%H-%M")
+                # # Create a unique filename for the Pareto front plot
+                # filename = f"Pareto_Front__Trials-{len(study_in_memory.trials)}__{timestamp}.html"
+                # # Specify the directory to save the file
+                # save_dir = '../DAB_Magnetics/example_results/pareto'
+                # os.makedirs(save_dir, exist_ok=True)
+                # # Combine directory and filename
+                # file_path = os.path.join(save_dir, filename)
+                # fig.write_html(file_path)
+                # # Print the file path for reference
+                # print('file_path:', file_path)
 
 
             @staticmethod
@@ -872,21 +879,23 @@ def load_fem_simulation_results(working_directory: str):
 
     # In this case the self inductivity of winding1 will be analyzed
     inductivities = []
-    total_DC_loss = []
+    total_winding_loss = []
+    total_Hys_loss = []
     total_volume = []
     total_cost = []
     for _, data in log_parser.data.items():
         inductivities.append(data.sweeps[0].windings[0].flux_over_current)
-        total_DC_loss.append(data.total_core_losses + data.total_winding_losses)
+        total_winding_loss.append(data.total_winding_losses)
+        total_Hys_loss.append(data.total_core_losses)
         total_volume.append(data.core_2daxi_total_volume)
         total_cost.append(data.total_cost)
 
-    real_inductance = []
-    for i in range(len(total_DC_loss)):
-        real_inductance.append(inductivities[i].real)
-        # print(f'{labels[i]} -- total_loss: {total_DC_loss[i]} W -- core_2daxi_total_volume: {total_volume[i]}')
+    # real_inductance = []
+    # for i in range(len(total_DC_loss)):
+    #     real_inductance.append(inductivities[i].real)
+    #     print(f'{labels[i]} -- total_loss: {total_DC_loss[i]} W -- core_2daxi_total_volume: {total_volume[i]}')
 
-    return total_DC_loss, total_volume, labels
+    return total_winding_loss, total_Hys_loss, total_volume, labels
 
 
 def load_dab_dto_from_study(working_directory: str, study_name: str, trail_number: int | None = None):

@@ -20,7 +20,8 @@ def stacked_transformer_fem_simulation_from_result_dto(config_dto: DABStoSingleI
                                                        fem_working_directory: str,
                                                        fundamental_frequency: float,
                                                        time_current_vectors,
-                                                       visualize: bool = False):
+                                                       visualize: bool = False,
+                                                       show_last_fem_simulation: bool = False):
     """FEM simulation for the integrated transformer from a result DTO."""
     # 1. chose simulation type
     geo = femmt.MagneticComponent(component_type=femmt.ComponentType.IntegratedTransformer,
@@ -89,7 +90,7 @@ def stacked_transformer_fem_simulation_from_result_dto(config_dto: DABStoSingleI
     geo.create_model(freq=fundamental_frequency, pre_visualize_geometry=visualize)
 
     geo.stacked_core_study(number_primary_coil_turns=dto.n_p_top, time_current_vectors=time_current_vectors,
-                           plot_waveforms=False, fft_filter_value_factor=0.05, show_fem_simulation_results=True)
+                           plot_waveforms=False, fft_filter_value_factor=0.05, show_last_fem_simulation=show_last_fem_simulation)
 
     difference_l_h = 669e-6 - geo.L_h_conc
     difference_l_s = 125e-6 - geo.L_s_conc
@@ -150,5 +151,4 @@ def stacked_transformer_fem_simulations_from_result_dtos(config_dto: DABStoSingl
 
             except Exception as e:
                 print(f"Exception: {e}")
-
 
