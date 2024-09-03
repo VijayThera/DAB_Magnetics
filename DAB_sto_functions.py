@@ -28,7 +28,17 @@ def stacked_transformer_fem_simulation_from_result_dto(config_dto: DABStoSingleI
     # 1. chose simulation type
     geo = femmt.MagneticComponent(component_type=femmt.ComponentType.IntegratedTransformer,
                                   working_directory=fem_working_directory,
-                                  verbosity=femmt.Verbosity.Silent)
+                                  verbosity=femmt.Verbosity.Silent,
+                                  simulation_name=f"Case_{dto.case}")
+
+    electro_magnetic_directory_single_process = os.path.join(fem_working_directory,
+                                                             "electro_magnetic")
+    strands_coefficients_folder_single_process = os.path.join(electro_magnetic_directory_single_process,
+                                                              "Strands_Coefficients")
+
+    # Update directories for each model
+    geo.file_data.update_paths(fem_working_directory, electro_magnetic_directory_single_process,
+                               strands_coefficients_folder_single_process)
 
     core_dimensions = femmt.dtos.StackedCoreDimensions(core_inner_diameter=dto.core_inner_diameter,
                                                        window_w=dto.window_w,
@@ -92,7 +102,7 @@ def stacked_transformer_fem_simulation_from_result_dto(config_dto: DABStoSingleI
     geo.create_model(freq=fundamental_frequency, pre_visualize_geometry=visualize)
 
     geo.stacked_core_study(number_primary_coil_turns=dto.n_p_top, time_current_vectors=time_current_vectors,
-                           plot_waveforms=False, fft_filter_value_factor=0.05, show_last_fem_simulation=show_last_fem_simulation)
+                           plot_waveforms=False, fft_filter_value_factor=0.05)#, show_last_fem_simulation=show_last_fem_simulation)
 
     difference_l_h = 669e-6 - geo.L_h_conc
     difference_l_s = 125e-6 - geo.L_s_conc
@@ -187,8 +197,16 @@ def stacked_transformer_fem_simulations_from_result_dtos(config_dto: DABStoSingl
                     time_current_vectors=time_current_vectors,
                     visualize=visualize)
 
+                # source_json_file = os.path.join(
+                #     ito_target_and_fixed_parameters_dto.working_directories.fem_working_directory,
+                #     "results", "log_electro_magnetic.json")
+                # destination_json_file = os.path.join(
+                #     ito_target_and_fixed_parameters_dto.working_directories.fem_simulation_results_directory,
+                #     f'case_{dto.case}.json')
+
+                # copy result files to result-file folder
                 source_json_file = os.path.join(
-                    ito_target_and_fixed_parameters_dto.working_directories.fem_working_directory,
+                    ito_target_and_fixed_parameters_dto.working_directories.fem_working_directory, f'process_{process_number}',
                     "results", "log_electro_magnetic.json")
                 destination_json_file = os.path.join(
                     ito_target_and_fixed_parameters_dto.working_directories.fem_simulation_results_directory,
