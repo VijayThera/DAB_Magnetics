@@ -753,10 +753,10 @@ class DABStackedTransformerOptimization:
         @staticmethod
         def simulate(config_dto: DABStoSingleInputConfig, simulation_dto_list: List[DABStoSingleResultFile],
                      max_loss: int,
-                     visualize: bool = False):
+                     visualize: bool = False, process_number: int = 1):
             """Perform the FEM simulation."""
             dab_func.stacked_transformer_fem_simulations_from_result_dtos(config_dto, simulation_dto_list, max_loss,
-                                                                          visualize)
+                                                                          visualize, process_number)
 
 
 def result_file_dict_to_dto(result_file_dict):

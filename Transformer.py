@@ -1,5 +1,6 @@
 # python libraries
 import os
+import sys
 
 # 3rd party libraries
 import numpy as np
@@ -91,13 +92,13 @@ DAB_transformer_config = dabdtos.DABStoSingleInputConfig(
 )
 
 # task = 'start_study'
-task = 'filter_reluctance_model'
-# task = 'fem_simulation_from_filtered_reluctance_model_results'
+# task = 'filter_reluctance_model'
+task = 'fem_simulation_from_filtered_reluctance_model_results'
 # task = 'plot_study_results'
 # task = 'compare_results'
 # task = 'load_single_trail'
 
-max_loss = 12
+max_loss = 22
 max_volume = 50e-6
 trail_number = 3026
 
@@ -107,6 +108,8 @@ study_name = "workflow_test"
 if __name__ == '__main__':
 
     time_start = datetime.now()
+
+    process_number = int(sys.argv[1])
 
     # dab.study_to_df(study_name=study_name, database_url=f"sqlite:///{DAB_transformer_config.working_directory}/study_{study_name}.sqlite3")
 
@@ -150,7 +153,7 @@ if __name__ == '__main__':
         # start FEM simulation
         dab.DABStackedTransformerOptimization.FemSimulation.simulate(config_dto=DAB_transformer_config,
                                                                      simulation_dto_list=pareto_reluctance_dto_list,
-                                                                     max_loss=max_loss, visualize=False)
+                                                                     max_loss=max_loss, visualize=False, process_number=process_number)
 
     # ==========================================================================================
     # ==========================================================================================

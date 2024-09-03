@@ -103,7 +103,7 @@ def stacked_transformer_fem_simulation_from_result_dto(config_dto: DABStoSingleI
 
     # Define the directory and file path
     directory = os.path.join(os.path.dirname(__file__), "example_results",
-                             f'optuna_stacked_transformer_optimization_flxcore')
+                             f'STO_stcore')
     csv_file = os.path.join(directory, 'output_data.csv')
 
     # Ensure the directory exists; if not, create it
@@ -152,7 +152,7 @@ def stacked_transformer_fem_simulation_from_result_dto(config_dto: DABStoSingleI
 def stacked_transformer_fem_simulations_from_result_dtos(config_dto: DABStoSingleInputConfig,
                                                          simulation_dto_list: List[DABStoSingleResultFile],
                                                          max_loss: int,
-                                                         visualize: bool = False,
+                                                         visualize: bool = False, process_number: int = 1
                                                          ):
     """FEM simulation for the integrated transformer from a result DTO."""
     ito_target_and_fixed_parameters_dto = dab.DABStackedTransformerOptimization.calculate_fix_parameters(
@@ -182,7 +182,7 @@ def stacked_transformer_fem_simulations_from_result_dtos(config_dto: DABStoSingl
                 stacked_transformer_fem_simulation_from_result_dto(
                     config_dto=config_dto,
                     dto=dto,
-                    fem_working_directory=ito_target_and_fixed_parameters_dto.working_directories.fem_working_directory,
+                    fem_working_directory=os.path.join(ito_target_and_fixed_parameters_dto.working_directories.fem_working_directory, f"process_{process_number}"),
                     fundamental_frequency=fundamental_frequency,
                     time_current_vectors=time_current_vectors,
                     visualize=visualize)
