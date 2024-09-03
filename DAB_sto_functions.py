@@ -2,6 +2,8 @@
 # python libraries
 import shutil
 import os
+import csv
+
 from typing import List, Tuple
 import inspect
 
@@ -98,6 +100,51 @@ def stacked_transformer_fem_simulation_from_result_dto(config_dto: DABStoSingleI
                        abs(difference_l_s / 125e-6))
     print(f'geo.L_h_conc:{geo.L_h_conc} H,\ngeo.L_s_conc:{geo.L_s_conc} H,\ndeviation: {deviation} %')
     print(f'p_hyst: {dto.p_hyst} W,\nn_target: {dto.n_p_bot/dto.n_s_bot}, n_conc: {geo.n_conc}')
+
+    # Define the directory and file path
+    directory = os.path.join(os.path.dirname(__file__), "example_results",
+                             f'optuna_stacked_transformer_optimization_flxcore')
+    csv_file = os.path.join(directory, 'output_data.csv')
+
+    # Ensure the directory exists; if not, create it
+    os.makedirs(directory, exist_ok=True)
+
+    # Define the headers and data to save
+    headers = ['case_number',
+               'l_s_conc',
+               'l_h_conc',
+               'deviation',
+               'n_conc',
+               'n_target',
+               'RM_p_hyst',
+               'RM_p_winding',
+               'volume']
+    data = [dto.case,
+            geo.L_s_conc,
+            geo.L_h_conc,
+            deviation,
+            geo.n_conc,
+            (dto.n_p_bot/dto.n_s_bot),
+            dto.p_hyst,
+            (dto.primary_litz_wire_loss+dto.secondary_litz_wire_loss),
+            dto.core_2daxi_total_volume]
+
+    # Check if file exists to decide whether to write headers
+    file_exists = os.path.isfile(csv_file)
+
+    # Open the file in append mode to preserve previous data
+    with open(csv_file, mode='a', newline='') as file:
+        writer = csv.writer(file)
+
+        # Write headers only if the file does not already exist
+        if not file_exists:
+            writer.writerow(headers)
+
+        # Write the new row of data
+        writer.writerow(data)
+
+    print(f'Data saved to {csv_file}')
+
 
     return geo
 
