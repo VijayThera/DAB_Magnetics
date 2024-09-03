@@ -455,6 +455,45 @@ import numpy as np
 from matplotlib import pyplot as plt
 import femmt.functions_reluctance as fr
 
+import os
+import csv
+
+# for i in range(10):
+#     # Define the directory and file path
+#     directory = os.path.join(os.path.dirname(__file__), "example_results",
+#                              f'optuna_stacked_transformer_optimization_flxcore')
+#     csv_file = os.path.join(directory, 'output_data.csv')
+#
+#     # Ensure the directory exists; if not, create it
+#     os.makedirs(directory, exist_ok=True)
+#
+#     # Define the headers and data to save
+#     headers = ['case_number',
+#                'l_s_conc',
+#                'l_h_conc',
+#                'deviation',
+#                'n_conc',
+#                'n_target',
+#                'RM_p_hyst',
+#                'RM_p_winding']
+#     data = [i, i, i, i, i, i, i, i]
+#
+#     # Check if file exists to decide whether to write headers
+#     file_exists = os.path.isfile(csv_file)
+#
+#     # Open the file in append mode to preserve previous data
+#     with open(csv_file, mode='a', newline='') as file:
+#         writer = csv.writer(file)
+#
+#         # Write headers only if the file does not already exist
+#         if not file_exists:
+#             writer.writerow(headers)
+#
+#         # Write the new row of data
+#         writer.writerow(data)
+#
+#     print(f'Data saved to {csv_file}')
+
 waveforms = pd.read_csv('currents_shifted.csv')
 times = waveforms['# t'].to_numpy() - waveforms['# t'][0]
 i_ls = waveforms['i_Ls'].to_numpy() - np.mean(waveforms['i_Ls'])

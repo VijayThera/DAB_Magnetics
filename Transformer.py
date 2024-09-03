@@ -77,7 +77,7 @@ DAB_transformer_config = dabdtos.DABStoSingleInputConfig(
 
     # misc
     working_directory=os.path.join(os.path.dirname(__file__), "example_results",
-                                   f'STO_stcore'),
+                                   f'STO_stcore'), #optuna_stacked_transformer_optimization_flxcore
     fft_filter_value_factor=0.05,
     mesh_accuracy=0.8,
 
@@ -90,16 +90,16 @@ DAB_transformer_config = dabdtos.DABStoSingleInputConfig(
     permittivity_measurement_setup=mdb.MeasurementSetup.LEA_LK
 )
 
-task = 'start_study'
-# task = 'filter_reluctance_model'
+# task = 'start_study'
+task = 'filter_reluctance_model'
 # task = 'fem_simulation_from_filtered_reluctance_model_results'
 # task = 'plot_study_results'
 # task = 'compare_results'
 # task = 'load_single_trail'
 
-max_loss = 5000
+max_loss = 12
 max_volume = 50e-6
-trail_number = 4008
+trail_number = 3026
 
 # study_name = f'workflow_{datetime.now().strftime("%m-%d__%H-%M")}'
 study_name = "workflow_test"
@@ -107,6 +107,8 @@ study_name = "workflow_test"
 if __name__ == '__main__':
 
     time_start = datetime.now()
+
+    # dab.study_to_df(study_name=study_name, database_url=f"sqlite:///{DAB_transformer_config.working_directory}/study_{study_name}.sqlite3")
 
     if task == 'start_study':
         dab.DABStackedTransformerOptimization.ReluctanceModel.NSGAII.start_study(study_name,
